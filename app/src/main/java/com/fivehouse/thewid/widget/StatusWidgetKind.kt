@@ -62,7 +62,14 @@ enum class StatusWidgetKind(
     ),
     Time(R.string.widget_time, TimeWidgetReceiver::class, emptyList());
 
-    fun newWidget(): StatusWidget = StatusWidget(this)
+    fun newWidget(): StatusWidget = when (this) {
+        Battery -> BatteryWidget()
+        Cellular -> CellularWidget()
+        Wifi -> WifiWidget()
+        Sound -> SoundWidget()
+        Alarm -> AlarmWidget()
+        Time -> TimeWidget()
+    }
 
     companion object {
         fun forReceiverClass(className: String): StatusWidgetKind? =

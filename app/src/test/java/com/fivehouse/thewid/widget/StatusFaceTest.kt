@@ -37,6 +37,13 @@ class StatusFaceTest {
     }
 
     @Test
+    fun glowOffKeepsTheNormalTintButStillShowsCharging() {
+        val face = BatteryStatus(68, isCharging = true).toFace(glow = false)
+        assertFalse(face.tint == GlossTint.Accent)
+        assertTrue(face.isLive)
+    }
+
+    @Test
     fun unknownBatteryIsDashed() {
         assertEquals(ShapeSurface.Dashed, BatteryStatus(null, isCharging = false).toFace().surface)
     }

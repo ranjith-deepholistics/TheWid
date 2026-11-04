@@ -42,13 +42,13 @@ data class StatusFace(
     val isLive: Boolean = false
 )
 
-fun BatteryStatus.toFace(shape: ShapeCatalog = ShapeCatalog.SoftBurst): StatusFace {
+fun BatteryStatus.toFace(shape: ShapeCatalog = ShapeCatalog.SoftBurst, glow: Boolean = true): StatusFace {
     val level = percent ?: return StatusFace(shape, FaceValue.Literal(NO_VALUE), surface = ShapeSurface.Dashed)
     return StatusFace(
         shape = shape,
         value = FaceValue.Literal("$level%"),
         fill = level / 100f,
-        tint = if (isCharging) GlossTint.Accent else WidgetTint,
+        tint = if (isCharging && glow) GlossTint.Accent else WidgetTint,
         isLive = isCharging
     )
 }

@@ -26,8 +26,155 @@
     <string name="configure_hint">Resize it on your home screen any time.</string>
     <string name="configure_done">Done</string>
 
-    <string name="catalog_widgets">Status widgets</string>
-    <string name="catalog_pin_unsupported">This launcher can\'t add widgets from an app. Add them from its widget picker.</string>
+    <string name="product_name">Shapes</string>
+    <string name="product_tagline">Your phone, as shapes.</string>
+    <string name="product_made_with">MATERIAL 3 EXPRESSIVE</string>
+    <string name="action_back">Back</string>
+    <string name="action_close">Close</string>
+    <string name="action_next">Next</string>
+    <string name="action_clear">Clear</string>
+    <string name="soon">Soon</string>
+
+    <string name="widget_alerts">Alerts</string>
+    <string name="widget_now_playing">Now playing</string>
+    <string name="widget_week">Week</string>
+    <string name="widget_mochi">Mochi</string>
+    <string name="widget_breathe">Breathe</string>
+    <string name="widget_heart_pulse">Heart Pulse</string>
+    <string name="widget_inner_circle">Inner Circle</string>
+    <string name="widget_decide">Decide</string>
+
+    <string name="category_status">Status</string>
+    <string name="category_time">Time</string>
+    <string name="category_companion">Companion</string>
+    <string name="category_people">People</string>
+    <string name="category_fun">Fun</string>
+    <string name="category_status_subtitle">what your phone is doing</string>
+    <string name="category_time_subtitle">when things happen</string>
+    <string name="category_companion_subtitle">a little company</string>
+    <string name="category_people_subtitle">up to 4</string>
+    <string name="category_fun_subtitle">for small choices</string>
+    <plurals name="category_count">
+        <item quantity="one">%1$d widget · %2$s</item>
+        <item quantity="other">%1$d widgets · %2$s</item>
+    </plurals>
+    <string name="category_live_now">Live now</string>
+
+    <string name="onboarding1_eyebrow">HOW TO READ IT</string>
+    <string name="onboarding1_title">Your phone,\nas shapes.</string>
+    <string name="onboarding1_body">Battery, Wi-Fi, sound and more. Read at a glance, with no words needed.</string>
+    <string name="onboarding_rule_fill">Fill = level</string>
+    <string name="onboarding_rule_outline">Outline = off</string>
+    <string name="onboarding_rule_spikes">Spikes = activity</string>
+    <string name="onboarding_rule_morph">Morph = change</string>
+    <string name="onboarding2_eyebrow">YOUR HERO</string>
+    <string name="onboarding2_title">One hero,\nfront and centre.</string>
+    <string name="onboarding2_body">Pick the shape you want to see first. Change it any time.</string>
+    <string name="onboarding3_eyebrow">PRIVATE BY DESIGN</string>
+    <string name="onboarding3_title">Stays on\nyour phone.</string>
+    <string name="onboarding3_no_account">No account</string>
+    <string name="onboarding3_offline">Works offline</string>
+    <string name="onboarding3_no_tracking">No tracking</string>
+    <string name="onboarding_start">Start</string>
+
+    <string name="library_categories">Categories</string>
+    <plurals name="library_widget_count">
+        <item quantity="one">%1$d widget</item>
+        <item quantity="other">%1$d widgets</item>
+    </plurals>
+    <string name="library_hero_label">Your hero · %1$s</string>
+    <string name="library_hero_change">Tap to change</string>
+    <string name="library_search">Search</string>
+    <string name="nav_my_widgets">My widgets</string>
+    <string name="nav_add">Add a widget</string>
+    <string name="nav_settings">Settings</string>
+
+    <string name="customize_shape_named">SHAPE · %1$s</string>
+    <string name="customize_glow">Glow while charging</string>
+    <string name="customize_no_permission">No permission needed</string>
+    <string name="customize_add">Add to home screen</string>
+    <string name="customize_size_hint">Your launcher sets the first size. Long-press to resize.</string>
+    <string name="size_1x1">1×1</string>
+    <string name="size_2x2">2×2</string>
+    <string name="size_4x2">4×2</string>
+
+    <string name="added_title">All good.</string>
+    <string name="added_new">NEW</string>
+    <string name="added_snack_title">Added to home screen</string>
+    <string name="added_snack_body">Long-press to resize</string>
+    <string name="added_make_hero">Make hero</string>
+
+    <plurals name="my_widgets_placed">
+        <item quantity="one">%1$d placed</item>
+        <item quantity="other">%1$d placed</item>
+    </plurals>
+    <string name="my_widgets_title">On your home screen</string>
+    <string name="my_widgets_hero">Hero</string>
+    <string name="my_widgets_edit">Edit</string>
+    <string name="my_widgets_remove">Remove</string>
+    <string name="my_widgets_hint">Swipe left on a widget to see how to remove it</string>
+    <string name="my_widgets_add">Add a widget</string>
+    <string name="my_widgets_remove_title">Remove %1$s</string>
+    <string name="my_widgets_remove_body">Only your launcher can remove a widget. Long-press it on your home screen, then drag it to Remove.</string>
+    <string name="my_widgets_remove_ok">Got it</string>
+    <string name="empty_eyebrow">My widgets</string>
+    <string name="empty_title">Nothing placed yet</string>
+    <string name="empty_body">Start with one shape. Most people pick one of these:</string>
+    <string name="empty_browse">Browse all shapes</string>
+
+    <string name="hero_eyebrow">Hero widget</string>
+    <string name="hero_title">Pick the one shape\nyou see first.</string>
+    <string name="hero_set">Set %1$s as hero</string>
+
+    <string name="by_hand_eyebrow">Your launcher needs a hand</string>
+    <string name="by_hand_title">Add it in three taps</string>
+    <string name="by_hand_step1">Press and hold an empty spot on your home screen</string>
+    <string name="by_hand_step2">Tap Widgets in the menu that appears</string>
+    <string name="by_hand_step3">Find %1$s, then drag %2$s onto your screen</string>
+    <string name="by_hand_widgets_chip">Widgets</string>
+    <string name="by_hand_ok">Got it</string>
+
+    <string name="search_hint">Search widgets and settings</string>
+    <string name="search_widgets">WIDGETS</string>
+    <string name="search_settings">SETTINGS</string>
+    <string name="search_recent">RECENT</string>
+    <string name="search_no_results">Nothing matches that. Try a widget name.</string>
+    <string name="search_result_subtitle">%1$s · %2$s</string>
+
+    <string name="settings_title">Settings</string>
+    <string name="settings_access">ACCESS</string>
+    <string name="settings_look">LOOK</string>
+    <string name="settings_notifications">Notifications</string>
+    <string name="settings_notifications_body">Alerts, Now playing</string>
+    <string name="settings_overlay">Over other apps</string>
+    <string name="settings_overlay_body">Heart Pulse</string>
+    <string name="settings_background">Background</string>
+    <string name="settings_background_body">Keeps widgets fresh</string>
+    <string name="settings_on">On</string>
+    <string name="settings_turn_on">Turn on</string>
+    <string name="settings_theme">Theme</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+    <string name="settings_theme_auto">Auto</string>
+    <string name="settings_atmosphere">Atmosphere</string>
+    <string name="settings_hero">Hero widget</string>
+    <string name="settings_refresh">Refresh</string>
+    <string name="settings_refresh_value">Every 15 min</string>
+    <string name="settings_footer">Nothing leaves your phone · v%1$s</string>
+    <string name="settings_foundation">Foundation catalog (debug builds)</string>
+    <string name="settings_background_search_body">Helps widgets stay fresh</string>
+    <string name="settings_theme_search_body">Light, dark or automatic</string>
+    <string name="settings_atmosphere_search_body">The colour behind every screen</string>
+    <string name="settings_hero_search_body">The shape you see first</string>
+
+    <string name="about_version">VERSION %1$s</string>
+    <string name="about_no_account">No account, no sign-in</string>
+    <string name="about_nothing_sent">Nothing is sent off your phone</string>
+    <string name="about_no_ads">No ads, no tracking</string>
+    <string name="about_licences">Open-source licences</string>
+    <string name="about_rate">Rate on Google Play</string>
+    <string name="about_licences_ok">Close</string>
+    <string name="about_licences_libraries">AndroidX, Jetpack Compose, Glance, Hilt, Kotlin and Haze are used under the Apache License 2.0.</string>
 
     <string name="catalog_title">Foundation</string>
     <string name="catalog_type">Type: Doto and Roboto Flex</string>

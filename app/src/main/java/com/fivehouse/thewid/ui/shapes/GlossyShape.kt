@@ -48,6 +48,7 @@ import com.fivehouse.thewid.ui.theme.ShapesTheme
  * @param contentDescription what the shape currently shows, or null if decorative.
  * @param fill level from 0 to 1, clipped from the bottom. Only applies to [ShapeSurface.Glossy].
  * @param castShadow reserves the bottom of the box for a soft shadow. For hero shapes.
+ * @param clock draws the Time face's hand and minute dot over the shape.
  * @param content drawn centred over the shape, such as the number inside Alerts.
  */
 @Composable
@@ -59,6 +60,7 @@ fun GlossyShape(
     surface: ShapeSurface = ShapeSurface.Glossy,
     tint: GlossTint = ShapesTheme.atmosphere.gloss,
     castShadow: Boolean = false,
+    clock: ClockMarks? = null,
     content: @Composable BoxScope.() -> Unit = {}
 ) {
     val morphState = remember { ShapeMorphState(shape) }
@@ -91,6 +93,7 @@ fun GlossyShape(
                         height = size.height,
                         spec = ShapePaintSpec(animatedFill, surface, tint, outlineColor, castShadow)
                     )
+                    if (clock != null) painter.drawClock(canvas.nativeCanvas, minOf(size.width, size.height), clock)
                 }
             },
         contentAlignment = Alignment.Center,

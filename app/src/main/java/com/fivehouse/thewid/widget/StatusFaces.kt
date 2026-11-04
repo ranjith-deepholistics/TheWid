@@ -39,11 +39,14 @@ class StatusFaces @Inject constructor(
     private val alarm: AlarmRepository,
     private val time: TimeRepository
 ) {
-    /** @param shape the user's choice. Ignored for kinds whose shape reports the state. */
-    fun faces(kind: StatusWidgetKind, shape: ShapeCatalog?): Flow<StatusFace> {
+    /**
+     * @param shape the user's choice. Ignored for kinds whose shape reports the state.
+     * @param glow whether Battery turns accent while charging.
+     */
+    fun faces(kind: StatusWidgetKind, shape: ShapeCatalog? = null, glow: Boolean = true): Flow<StatusFace> {
         val chosen = shape?.takeIf { it in kind.shapeOptions } ?: kind.shapeOptions.firstOrNull()
         return when (kind) {
-            StatusWidgetKind.Battery -> battery.status.map { it.toFace(checkNotNull(chosen)) }
+            StatusWidgetKind.Battery -> battery.status.map { it.toFace(checkNotNull(chosen), glow) }
 
             StatusWidgetKind.Cellular -> cellular.status.map { it.toFace(checkNotNull(chosen)) }
 

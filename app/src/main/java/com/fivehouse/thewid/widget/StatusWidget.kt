@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.glance.ColorFilter
 import androidx.glance.GlanceId
@@ -65,6 +66,7 @@ import java.util.Date
 import kotlinx.coroutines.flow.first
 
 val WidgetShapeKey = stringPreferencesKey("shape")
+val WidgetGlowKey = booleanPreferencesKey("glow")
 
 private val MinTileSide = 110.dp
 private val MinWideWidth = 220.dp
@@ -73,7 +75,11 @@ private val WideShape = 100.dp
 private const val SQUARE_NUMERAL_SP = 24f
 private const val WIDE_NUMERAL_SP = 44f
 
-class StatusWidget(private val kind: StatusWidgetKind) : GlanceAppWidget() {
+/**
+ * One subclass per kind, because Glance finds a widget's instances by class. If the kinds shared a
+ * class, `updateAll` on one kind would redraw every placed widget as that kind.
+ */
+sealed class StatusWidget(private val kind: StatusWidgetKind) : GlanceAppWidget() {
     // Exact sends one layout per orientation at its true size. Responsive would send every layout's
     // bitmaps in a single update, which risks Android's roughly 1 MB limit on high-density screens.
     override val sizeMode = SizeMode.Exact
@@ -83,17 +89,33 @@ class StatusWidget(private val kind: StatusWidgetKind) : GlanceAppWidget() {
         val label = context.getString(kind.label)
         val saved = getAppWidgetState(context, PreferencesGlanceStateDefinition, id)
         // Read a first value up front so the widget never composes an empty placeholder.
-        val initial = faces.faces(kind, saved.chosenShape()).first()
+        val initial = faces.faces(kind, saved.chosenShape(), saved.glow()).first()
         provideContent {
-            val shape = currentState<Preferences>().chosenShape()
-            val flow = remember(shape) { faces.faces(kind, shape) }
+            val prefs = currentState<Preferences>()
+            val shape = prefs.chosenShape()
+            val glow = prefs.glow()
+            val flow = remember(shape, glow) { faces.faces(kind, shape, glow) }
             val face by flow.collectAsState(initial)
             StatusWidgetContent(face, label)
         }
     }
 }
 
-private fun Preferences.chosenShape(): ShapeCatalog? =
+class BatteryWidget : StatusWidget(StatusWidgetKind.Battery)
+
+class CellularWidget : StatusWidget(StatusWidgetKind.Cellular)
+
+class WifiWidget : StatusWidget(StatusWidgetKind.Wifi)
+
+class SoundWidget : StatusWidget(StatusWidgetKind.Sound)
+
+class AlarmWidget : StatusWidget(StatusWidgetKind.Alarm)
+
+class TimeWidget : StatusWidget(StatusWidgetKind.Time)
+
+fun Preferences.glow(): Boolean = this[WidgetGlowKey] ?: true
+
+fun Preferences.chosenShape(): ShapeCatalog? =
     this[WidgetShapeKey]?.let { saved -> ShapeCatalog.entries.firstOrNull { it.name == saved } }
 
 enum class WidgetLayout { ShapeOnly, Square, Wide }

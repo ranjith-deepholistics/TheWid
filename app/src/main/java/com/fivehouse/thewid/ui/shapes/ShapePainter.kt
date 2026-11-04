@@ -8,8 +8,11 @@ import android.graphics.Path
 import android.graphics.RadialGradient
 import android.graphics.RectF
 import android.graphics.Shader
+import androidx.compose.runtime.Immutable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.graphics.shapes.toPath
+import com.fivehouse.thewid.ui.theme.Accent
 import com.fivehouse.thewid.ui.theme.GlossTint
 import com.fivehouse.thewid.ui.theme.Ink
 
@@ -26,6 +29,15 @@ internal data class ShapePaintSpec(
 
 /** The y a level's fill reaches: fills rise from [bottom] towards [top]. */
 internal fun fillLineY(top: Float, bottom: Float, fill: Float): Float = bottom - (bottom - top) * fill.coerceIn(0f, 1f)
+
+/** Positions for a clock's Arrow hand and Diamond minute dot, clockwise from 12. */
+@Immutable
+data class ClockMarks(val hourDegrees: Float, val minuteDegrees: Float)
+
+private const val CLOCK_HAND_SCALE = 0.3f
+private const val CLOCK_HAND_ORBIT = 0.12f
+private const val CLOCK_DOT_SCALE = 0.11f
+private const val CLOCK_DOT_ORBIT = 0.42f
 
 // Share of the box the shape keeps when a shadow needs room beneath it.
 private const val SHADOW_SHAPE_SCALE = 0.86f
@@ -95,6 +107,28 @@ internal class ShapePainter(private val density: Float) {
         fillPaint.shader = null
         fillPaint.color = color
         canvas.drawPath(devicePath, fillPaint)
+    }
+
+    /** The Arrow hand and Diamond minute dot of the Time face, over a shape in a [boxSize] square. */
+    fun drawClock(canvas: Canvas, boxSize: Float, clock: ClockMarks) {
+        drawMark(
+            canvas = canvas,
+            unitPath = ShapeCatalog.Arrow.polygon.toPath(Path()),
+            boxSize = boxSize,
+            degrees = clock.hourDegrees,
+            markScale = CLOCK_HAND_SCALE,
+            orbit = CLOCK_HAND_ORBIT,
+            color = Ink.toArgb()
+        )
+        drawMark(
+            canvas = canvas,
+            unitPath = ShapeCatalog.Diamond.polygon.toPath(Path()),
+            boxSize = boxSize,
+            degrees = clock.minuteDegrees,
+            markScale = CLOCK_DOT_SCALE,
+            orbit = CLOCK_DOT_ORBIT,
+            color = Accent.toArgb()
+        )
     }
 
     private fun drawGlossy(canvas: Canvas, spec: ShapePaintSpec) {

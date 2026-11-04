@@ -9,7 +9,7 @@ Product spec, design tokens and build phases: @SHAPES_BUILD_SPEC.md
 - One phase per branch and PR. Stop after each phase, summarise, and wait for review. Run `/phase-check` before stopping.
 - Never start an emulator. Build the app, then give the user a checklist to run on their physical device. Report anything that needs a device as unverified.
 - Mockups are in `design/Shapes-V1/`, numbered as in the spec. Files 27-37 are the concept shots.
-- The app name isn't decided: the spec says "Shapes", the project says "TheWid". Don't rename anything without asking.
+- The app name isn't decided: the spec and in-app text say "Shapes" (`R.string.product_name`), the launcher label and project say "TheWid". Don't rename anything without asking.
 
 ## Commands
 
@@ -32,5 +32,7 @@ Product spec, design tokens and build phases: @SHAPES_BUILD_SPEC.md
 - Get shapes from `ShapeCatalog`, never from hand-drawn paths.
 - Only `FrostedGlass.kt` may import Haze.
 - Glance can't set custom fonts or draw polygons: shapes and Doto values go through bitmaps, and the Time digits use a `TextClock` layout so they stay current between updates. Don't pass `SizeMode.Responsive`, which risks the roughly 1 MB limit on widget updates.
+- Each `StatusWidget` kind needs its own subclass: Glance finds instances by class, so a shared class makes `updateAll` redraw every widget as one kind.
+- Apps can't remove a launcher's widget or choose its placed size, so My widgets explains removal and Customize's size choice only previews.
 - Paint alpha multiplies a shader. Reset it before setting a shader on a reused `Paint`.
 - Dark atmospheres use a dimmer glass tile than the spec's values (8% fill, 20% border), following the Moss mockups. Light atmospheres use the spec's values.
