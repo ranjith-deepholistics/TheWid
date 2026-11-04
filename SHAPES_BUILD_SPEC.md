@@ -66,7 +66,7 @@ Designs are in `/design` (exported PNGs, numbered 1–26 plus the concept shots)
 | Widget | Data source | Shape(s) | Permission |
 |---|---|---|---|
 | Battery | `BatteryManager` / sticky battery intent | SoftBurst, fill = %, accent while charging | none |
-| Cellular | `TelephonyManager.getSignalStrength()` | Pentagon, fill = bars | none |
+| Cellular | `TelephonyManager.getSignalStrength()` + `TelephonyDisplayInfo` (network label, e.g. 5G) | Pentagon, fill = bars | none |
 | Wi-Fi | `ConnectivityManager` / `NetworkCapabilities` (strength only, no SSID) | Fan; dashed outline when off | none |
 | Sound | `AudioManager.ringerMode` | Circle (ring) / Cookie12Sided (vibrate) / Ghostish (silent) | none |
 | Alarm | `AlarmManager.getNextAlarmClock()` | SemiCircle (sunrise) | none |
