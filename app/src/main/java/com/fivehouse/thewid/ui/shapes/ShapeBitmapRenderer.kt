@@ -25,7 +25,8 @@ object ShapeBitmapRenderer {
         outlineColor: Color = Ink,
         castShadow: Boolean = false,
         clock: ClockMarks? = null,
-        art: Bitmap? = null
+        art: Bitmap? = null,
+        expression: FaceExpression? = null
     ): Bitmap {
         val bitmap = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
@@ -39,6 +40,7 @@ object ShapeBitmapRenderer {
             spec = ShapePaintSpec(fill.coerceIn(0f, 1f), surface, tint, outlineColor, castShadow, art)
         )
         if (clock != null) painter.drawClock(canvas, size, clock)
+        if (expression != null) painter.drawExpression(canvas, size, expression)
         return bitmap
     }
 }

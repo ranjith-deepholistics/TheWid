@@ -142,6 +142,7 @@ fun FaceShape(
         castShadow = castShadow,
         clock = face.clock,
         art = face.art,
+        expression = face.expression,
         content = content
     )
 }

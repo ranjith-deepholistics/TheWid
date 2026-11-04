@@ -15,6 +15,27 @@
     <string name="widget_time_description">The time as a sun by day and a cookie by night</string>
     <string name="widget_alerts_description">How many notifications are waiting. It only counts them.</string>
     <string name="widget_now_playing_description">The track playing now, squared off when paused</string>
+    <string name="widget_week_description">Your key dates, a shape for each kind of day</string>
+    <string name="widget_inner_circle_description">Up to four people, a shape for each</string>
+    <string name="widget_decide_description">Tap to let the shape choose</string>
+    <string name="widget_mochi_description">A small companion that reacts to your phone</string>
+    <string name="widget_breathe_description">A short breathing session, one tap away</string>
+    <string name="widget_value_today">TODAY</string>
+    <string name="widget_value_roll">ROLL</string>
+    <plurals name="widget_value_days">
+        <item quantity="one">%1$d DAY</item>
+        <item quantity="other">%1$d DAYS</item>
+    </plurals>
+    <plurals name="widget_value_sessions_today">
+        <item quantity="one">%1$d TODAY</item>
+        <item quantity="other">%1$d TODAY</item>
+    </plurals>
+    <string name="mochi_value_happy">HAPPY</string>
+    <string name="mochi_value_excited">EXCITED</string>
+    <string name="mochi_value_sleepy">SLEEPY</string>
+    <string name="mochi_value_dozing">DOZING</string>
+    <string name="mochi_value_lonely">LONELY</string>
+    <string name="mochi_value_busy">BUSY</string>
     <string name="widget_live">Live</string>
     <string name="widget_needs_access">Needs notification access</string>
     <string name="widget_value_playing">PLAY</string>
@@ -176,6 +197,65 @@
     <string name="permission_alerts_granted_also">Now playing is unlocked too.</string>
     <string name="permission_now_playing_granted_also">Alerts is unlocked too.</string>
     <string name="permission_customize_first">Customize first</string>
+
+    <string name="week_title">Your key dates</string>
+    <string name="week_no_calendar">No calendar access needed</string>
+    <string name="week_empty">Add a date and its shape appears here.</string>
+    <string name="week_add">Add a date</string>
+    <string name="week_add_title">New date</string>
+    <string name="week_label">What is it?</string>
+    <string name="week_kind_deadline">Deadline</string>
+    <string name="week_kind_busy">Busy</string>
+    <string name="week_kind_birthday">Birthday</string>
+    <string name="week_kind_trip">Trip</string>
+    <string name="week_remove">Remove %1$s</string>
+    <string name="setup_save">Save</string>
+    <string name="setup_cancel">Cancel</string>
+    <string name="setup_ok">OK</string>
+    <string name="setup_continue">Continue</string>
+
+    <string name="circle_title">Your inner circle</string>
+    <string name="circle_count">%1$d of %2$d people</string>
+    <string name="circle_add">Add person</string>
+    <string name="circle_shape_for">SHAPE FOR %1$s</string>
+    <string name="circle_privacy">Picked with Android\'s contact picker. No contacts access.</string>
+    <string name="circle_remove">Remove %1$s</string>
+
+    <string name="decide_range">%1$d to %2$d options</string>
+    <string name="decide_question">QUESTION</string>
+    <string name="decide_question_hint">Where to eat tonight?</string>
+    <string name="decide_options">OPTIONS</string>
+    <string name="decide_option_hint">An option</string>
+    <string name="decide_add_option">Add option</string>
+
+    <string name="mochi_name">NAME</string>
+    <string name="mochi_moods">MOODS</string>
+    <string name="mochi_charging">Charging</string>
+    <string name="mochi_charging_body">%1$s gets excited</string>
+    <string name="mochi_low_battery">Battery under 15%%</string>
+    <string name="mochi_low_battery_body">%1$s gets sleepy</string>
+    <string name="mochi_silent">Phone on silent</string>
+    <string name="mochi_silent_body">%1$s gets dozy</string>
+    <string name="mochi_wifi_off">Wi-Fi off</string>
+    <string name="mochi_wifi_off_body">%1$s gets lonely</string>
+    <string name="mochi_busy">Lots of alerts</string>
+    <string name="mochi_busy_body">%1$s gets busy. Needs notification access.</string>
+
+    <string name="breathe_start">Start a session</string>
+    <string name="breathe_title">Breathe</string>
+    <string name="breathe_rounds">%1$d/%2$d</string>
+    <string name="breathe_inhale">Inhale</string>
+    <string name="breathe_hold">Hold</string>
+    <string name="breathe_exhale">Exhale</string>
+    <string name="breathe_pause">Pause</string>
+    <string name="breathe_resume">Resume</string>
+    <string name="breathe_done_title">Well breathed.</string>
+    <string name="breathe_stat_rounds">Rounds</string>
+    <string name="breathe_stat_minutes">Minutes</string>
+    <string name="breathe_stat_today">Today</string>
+    <string name="breathe_minutes_value">%1$dm</string>
+    <string name="breathe_again">Again</string>
+    <string name="breathe_done">Done</string>
 
     <string name="settings_title">Settings</string>
     <string name="settings_access">ACCESS</string>

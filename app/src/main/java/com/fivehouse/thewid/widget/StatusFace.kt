@@ -1,8 +1,10 @@
 package com.fivehouse.thewid.widget
 
 import android.graphics.Bitmap
+import androidx.annotation.PluralsRes
 import androidx.annotation.StringRes
 import com.fivehouse.thewid.R
+import com.fivehouse.thewid.data.personal.Person
 import com.fivehouse.thewid.data.status.AlarmStatus
 import com.fivehouse.thewid.data.status.AlertsStatus
 import com.fivehouse.thewid.data.status.BatteryStatus
@@ -14,6 +16,7 @@ import com.fivehouse.thewid.data.status.SoundStatus
 import com.fivehouse.thewid.data.status.TimeStatus
 import com.fivehouse.thewid.data.status.WifiStatus
 import com.fivehouse.thewid.ui.shapes.ClockMarks
+import com.fivehouse.thewid.ui.shapes.FaceExpression
 import com.fivehouse.thewid.ui.shapes.ShapeCatalog
 import com.fivehouse.thewid.ui.shapes.ShapeSurface
 import com.fivehouse.thewid.ui.theme.Atmosphere
@@ -29,6 +32,8 @@ sealed interface FaceValue {
     data class Literal(val text: String) : FaceValue
 
     data class Resource(@param:StringRes val id: Int) : FaceValue
+
+    data class Plural(@param:PluralsRes val id: Int, val count: Int) : FaceValue
 
     /** A running clock that the launcher keeps current between widget updates. */
     data object LiveClock : FaceValue
@@ -46,7 +51,11 @@ data class StatusFace(
     val valueInside: Boolean = false,
     val needsAccess: Boolean = false,
     val caption: String? = null,
-    val art: Bitmap? = null
+    val art: Bitmap? = null,
+    val expression: FaceExpression? = null,
+    val strip: List<ShapeCatalog>? = null,
+    val people: List<Person>? = null,
+    val rollable: Boolean = false
 )
 
 fun BatteryStatus.toFace(shape: ShapeCatalog = ShapeCatalog.SoftBurst, glow: Boolean = true): StatusFace {

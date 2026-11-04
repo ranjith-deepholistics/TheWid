@@ -1,6 +1,7 @@
 package com.fivehouse.thewid.widget
 
 import android.content.Context
+import android.content.Intent
 import android.text.format.DateFormat
 import android.util.TypedValue
 import android.widget.RemoteViews
@@ -12,6 +13,7 @@ import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -22,11 +24,15 @@ import androidx.glance.Image
 import androidx.glance.ImageProvider
 import androidx.glance.LocalContext
 import androidx.glance.LocalSize
+import androidx.glance.action.ActionParameters
+import androidx.glance.action.actionParametersOf
 import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.AndroidRemoteViews
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.SizeMode
+import androidx.glance.appwidget.action.actionRunCallback
+import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.provideContent
 import androidx.glance.appwidget.state.getAppWidgetState
 import androidx.glance.background
@@ -49,8 +55,11 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
+import com.fivehouse.thewid.EXTRA_OPEN_KIND
 import com.fivehouse.thewid.MainActivity
 import com.fivehouse.thewid.R
+import com.fivehouse.thewid.data.personal.MAX_PEOPLE
+import com.fivehouse.thewid.data.personal.Person
 import com.fivehouse.thewid.data.status.BatteryStatus
 import com.fivehouse.thewid.data.status.CellularNetwork
 import com.fivehouse.thewid.data.status.CellularStatus
@@ -72,6 +81,8 @@ private val MinTileSide = 110.dp
 private val MinWideWidth = 220.dp
 private val SquareShape = 68.dp
 private val WideShape = 100.dp
+private val StripShape = 20.dp
+private val PersonShapeSize = 52.dp
 private const val SQUARE_NUMERAL_SP = 24f
 private const val WIDE_NUMERAL_SP = 44f
 
@@ -96,7 +107,7 @@ sealed class StatusWidget(private val kind: StatusWidgetKind) : GlanceAppWidget(
             val glow = prefs.glow()
             val flow = remember(shape, glow) { faces.faces(kind, shape, glow) }
             val face by flow.collectAsState(initial)
-            StatusWidgetContent(face, label)
+            StatusWidgetContent(kind, face, label)
         }
     }
 }
@@ -117,6 +128,16 @@ class AlertsWidget : StatusWidget(StatusWidgetKind.Alerts)
 
 class NowPlayingWidget : StatusWidget(StatusWidgetKind.NowPlaying)
 
+class WeekWidget : StatusWidget(StatusWidgetKind.Week)
+
+class InnerCircleWidget : StatusWidget(StatusWidgetKind.InnerCircle)
+
+class DecideWidget : StatusWidget(StatusWidgetKind.Decide)
+
+class MochiWidget : StatusWidget(StatusWidgetKind.Mochi)
+
+class BreatheWidget : StatusWidget(StatusWidgetKind.Breathe)
+
 fun Preferences.glow(): Boolean = this[WidgetGlowKey] ?: true
 
 fun Preferences.chosenShape(): ShapeCatalog? =
@@ -131,10 +152,26 @@ fun widgetLayoutFor(size: DpSize): WidgetLayout = when {
     else -> WidgetLayout.Square
 }
 
+val OpenKindKey = ActionParameters.Key<String>(EXTRA_OPEN_KIND)
+
 @Composable
-fun StatusWidgetContent(face: StatusFace, label: String) {
-    val open = GlanceModifier.clickable(actionStartActivity<MainActivity>())
+fun StatusWidgetContent(kind: StatusWidgetKind, face: StatusFace, label: String) {
+    val open = GlanceModifier.clickable(
+        when {
+            face.rollable -> actionRunCallback<RollDecisionAction>()
+
+            kind.needsSetup || kind == StatusWidgetKind.Breathe ->
+                actionStartActivity<MainActivity>(actionParametersOf(OpenKindKey to kind.name))
+
+            else -> actionStartActivity<MainActivity>()
+        }
+    )
     val size = LocalSize.current
+    val people = face.people
+    if (people != null) {
+        PeopleLayout(people, label, size, open)
+        return
+    }
     when (widgetLayoutFor(size)) {
         WidgetLayout.Wide -> WideLayout(face, label, open)
 
@@ -185,7 +222,66 @@ private fun WideLayout(face: StatusFace, label: String, modifier: GlanceModifier
                 FaceValueView(face, label, WIDE_NUMERAL_SP)
             }
         }
-        ShapeWithValue(face, label, null, WideShape, WIDE_NUMERAL_SP, GlanceModifier.size(WideShape))
+        if (face.strip != null) {
+            WeekStrip(face.strip)
+        } else {
+            ShapeWithValue(face, label, null, WideShape, WIDE_NUMERAL_SP, GlanceModifier.size(WideShape))
+        }
+    }
+}
+
+/** The current week as one small shape per day. */
+@Composable
+private fun WeekStrip(strip: List<ShapeCatalog>) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        strip.forEach { shape ->
+            ShapeImage(StatusFace(shape, FaceValue.Literal("")), null, StripShape, GlanceModifier.size(StripShape))
+        }
+    }
+}
+
+/** Each person opens their own contact card. Square and wide show up to four, a 1x1 just the first. */
+@Composable
+private fun PeopleLayout(people: List<Person>, label: String, size: DpSize, open: GlanceModifier) {
+    val layout = widgetLayoutFor(size)
+    if (layout == WidgetLayout.ShapeOnly) {
+        PersonMark(people.first(), 0, minOf(size.width, size.height), open.fillMaxSize())
+        return
+    }
+    Column(
+        open
+            .fillMaxSize()
+            .background(ImageProvider(R.drawable.widget_glass))
+            .padding(14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(label, style = TextStyle(color = ColorProvider(Ink), fontWeight = FontWeight.Medium))
+        Spacer(GlanceModifier.size(6.dp))
+        val perRow = if (layout == WidgetLayout.Wide) MAX_PEOPLE else 2
+        people.chunked(perRow).forEachIndexed { rowIndex, row ->
+            Row {
+                row.forEachIndexed { index, person ->
+                    PersonMark(
+                        person,
+                        rowIndex * perRow + index,
+                        PersonShapeSize,
+                        GlanceModifier
+                            .size(PersonShapeSize)
+                            .clickable(actionStartActivity(Intent(Intent.ACTION_VIEW, person.lookupUri.toUri())))
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PersonMark(person: Person, index: Int, size: Dp, modifier: GlanceModifier) {
+    val face = StatusFace(person.shape, FaceValue.Literal(""), tint = PersonTints[index % PersonTints.size])
+    Box(modifier, contentAlignment = Alignment.Center) {
+        ShapeImage(face, person.name, size, GlanceModifier.fillMaxSize())
+        Text(person.initial, style = TextStyle(color = ColorProvider(Ink), fontWeight = FontWeight.Normal))
     }
 }
 
@@ -288,7 +384,8 @@ private fun ShapeImage(face: StatusFace, description: String?, size: Dp, modifie
             fill = face.fill,
             surface = face.surface,
             clock = face.clock,
-            art = face.art
+            art = face.art,
+            expression = face.expression
         )
     }
     Image(
@@ -311,6 +408,7 @@ private fun faceDescription(face: StatusFace, label: String): String {
 fun FaceValue.resolve(context: Context): String = when (this) {
     is FaceValue.Literal -> text
     is FaceValue.Resource -> context.getString(id)
+    is FaceValue.Plural -> context.resources.getQuantityString(id, count, count)
     FaceValue.LiveClock -> DateFormat.getTimeFormat(context).format(Date())
 }
 

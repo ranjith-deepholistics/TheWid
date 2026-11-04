@@ -2,14 +2,20 @@ package com.fivehouse.thewid.widget
 
 import android.content.Context
 import android.text.format.DateFormat
+import com.fivehouse.thewid.data.personal.PersonalRepository
+import com.fivehouse.thewid.data.personal.moodFor
 import com.fivehouse.thewid.data.status.AlarmRepository
 import com.fivehouse.thewid.data.status.AlertsRepository
+import com.fivehouse.thewid.data.status.AlertsStatus
 import com.fivehouse.thewid.data.status.BatteryRepository
+import com.fivehouse.thewid.data.status.BatteryStatus
 import com.fivehouse.thewid.data.status.CellularRepository
 import com.fivehouse.thewid.data.status.NowPlayingRepository
 import com.fivehouse.thewid.data.status.SoundRepository
+import com.fivehouse.thewid.data.status.SoundStatus
 import com.fivehouse.thewid.data.status.TimeRepository
 import com.fivehouse.thewid.data.status.WifiRepository
+import com.fivehouse.thewid.data.status.WifiStatus
 import com.fivehouse.thewid.data.status.platform.AndroidAlarmSource
 import com.fivehouse.thewid.data.status.platform.AndroidAlertsSource
 import com.fivehouse.thewid.data.status.platform.AndroidBatterySource
@@ -30,6 +36,8 @@ import java.time.ZoneId
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 
 /** Turns live status into what a widget of each kind draws. */
@@ -43,7 +51,8 @@ class StatusFaces @Inject constructor(
     private val alarm: AlarmRepository,
     private val time: TimeRepository,
     private val alerts: AlertsRepository,
-    private val nowPlaying: NowPlayingRepository
+    private val nowPlaying: NowPlayingRepository,
+    private val personal: PersonalRepository
 ) {
     /**
      * @param shape the user's choice. Ignored for kinds whose shape reports the state.
@@ -69,8 +78,45 @@ class StatusFaces @Inject constructor(
             StatusWidgetKind.Alerts -> alerts.status.map { it.toFace() }
 
             StatusWidgetKind.NowPlaying -> nowPlaying.status.map { it.toFace() }
+
+            StatusWidgetKind.Week -> combine(personal.events, time.status) { events, now ->
+                weekFace(events, now.dateTime.toLocalDate())
+            }.distinctUntilChanged()
+
+            StatusWidgetKind.InnerCircle -> personal.people.map(::peopleFace)
+
+            StatusWidgetKind.Decide -> personal.decision.map { it.toFace() }
+
+            StatusWidgetKind.Breathe -> combine(personal.breathe, time.status) { log, now ->
+                log.toFace(now.dateTime.toLocalDate())
+            }.distinctUntilChanged()
+
+            StatusWidgetKind.Mochi -> mochiFaces()
         }
     }
+
+    private fun mochiFaces(): Flow<StatusFace> {
+        val phone = combine(battery.status, sound.status, wifi.status, alerts.status) { power, ringer, network, alert ->
+            PhoneMood(power, ringer, network, alert)
+        }
+        return combine(phone, personal.mochi) { state, settings ->
+            moodFor(
+                settings = settings,
+                isCharging = state.battery.isCharging,
+                batteryPercent = state.battery.percent,
+                isSilent = state.sound == SoundStatus.Silent,
+                isWifiOff = state.wifi == WifiStatus.Off,
+                alertCount = (state.alerts as? AlertsStatus.Count)?.count
+            ).toFace(settings.name)
+        }.distinctUntilChanged()
+    }
+
+    private data class PhoneMood(
+        val battery: BatteryStatus,
+        val sound: SoundStatus,
+        val wifi: WifiStatus,
+        val alerts: AlertsStatus
+    )
 }
 
 @Module
@@ -114,7 +160,12 @@ object StatusModule {
 @InstallIn(SingletonComponent::class)
 interface StatusFacesEntryPoint {
     fun statusFaces(): StatusFaces
+
+    fun personalRepository(): PersonalRepository
 }
 
 fun Context.statusFaces(): StatusFaces =
     EntryPointAccessors.fromApplication(applicationContext, StatusFacesEntryPoint::class.java).statusFaces()
+
+fun Context.personalRepository(): PersonalRepository =
+    EntryPointAccessors.fromApplication(applicationContext, StatusFacesEntryPoint::class.java).personalRepository()

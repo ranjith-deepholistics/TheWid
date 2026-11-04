@@ -18,6 +18,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
+            android:launchMode="singleTop"
             android:label="@string/app_name"
             android:theme="@style/Theme.TheWid"
             android:windowSoftInputMode="adjustResize">
@@ -125,6 +126,62 @@
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/widget_now_playing" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.WeekWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_week">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_week" />
+        </receiver>
+        <receiver
+            android:name=".widget.InnerCircleWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_inner_circle">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_inner_circle" />
+        </receiver>
+        <receiver
+            android:name=".widget.DecideWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_decide">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_decide" />
+        </receiver>
+        <receiver
+            android:name=".widget.MochiWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_mochi">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_mochi" />
+        </receiver>
+        <receiver
+            android:name=".widget.BreatheWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_breathe">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_breathe" />
         </receiver>
 
         <!-- Counts notifications and reads media sessions. Never opens a notification's content. -->

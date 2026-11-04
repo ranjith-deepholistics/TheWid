@@ -36,5 +36,6 @@ Product spec, design tokens and build phases: @SHAPES_BUILD_SPEC.md
 - Apps can't remove a launcher's widget or choose its placed size, so My widgets explains removal and Customize's size choice only previews.
 - The notification listener only counts. Never read a notification's title, text or extras: the permission screen and About promise this.
 - Only ask for notification access after someone taps a widget that needs it; `ShellApp` gates this in `toCustomize`.
+- Inner Circle uses the system contact picker and copies only the name, so it needs no contacts permission. Don't add features that read messages, numbers or calls without asking.
 - Paint alpha multiplies a shader. Reset it before setting a shader on a reused `Paint`.
 - Dark atmospheres use a dimmer glass tile than the spec's values (8% fill, 20% border), following the Moss mockups. Light atmospheres use the spec's values.

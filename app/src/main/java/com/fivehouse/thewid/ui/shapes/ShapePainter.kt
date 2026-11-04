@@ -33,6 +33,9 @@ internal data class ShapePaintSpec(
 /** The y a level's fill reaches: fills rise from [bottom] towards [top]. */
 internal fun fillLineY(top: Float, bottom: Float, fill: Float): Float = bottom - (bottom - top) * fill.coerceIn(0f, 1f)
 
+/** Mochi's little face, drawn over its shape. */
+enum class FaceExpression { Happy, Excited, Sleepy, Dozing, Lonely, Busy }
+
 /** Positions for a clock's Arrow hand and Diamond minute dot, clockwise from 12. */
 @Immutable
 data class ClockMarks(val hourDegrees: Float, val minuteDegrees: Float)
@@ -132,6 +135,66 @@ internal class ShapePainter(private val density: Float) {
             orbit = CLOCK_DOT_ORBIT,
             color = Accent.toArgb()
         )
+    }
+
+    /** Draws eyes and a mouth in Ink, proportioned to a [boxSize] square. */
+    fun drawExpression(canvas: Canvas, boxSize: Float, expression: FaceExpression) {
+        strokePaint.pathEffect = null
+        strokePaint.strokeCap = Paint.Cap.ROUND
+        strokePaint.strokeWidth = boxSize * 0.03f
+        strokePaint.color = Ink.toArgb()
+        fillPaint.shader = null
+        fillPaint.color = Ink.toArgb()
+        val left = boxSize * 0.38f
+        val right = boxSize * 0.62f
+        val eyeY = boxSize * 0.44f
+        val eye = boxSize * 0.045f
+        val dotEyes = {
+            canvas.drawCircle(left, eyeY, boxSize * 0.028f, fillPaint)
+            canvas.drawCircle(right, eyeY, boxSize * 0.028f, fillPaint)
+        }
+        val flatEyes = {
+            canvas.drawLine(left - eye, eyeY, left + eye, eyeY, strokePaint)
+            canvas.drawLine(right - eye, eyeY, right + eye, eyeY, strokePaint)
+        }
+        val mouthY = boxSize * 0.58f
+        val mouth = RectF(boxSize * 0.42f, mouthY - boxSize * 0.06f, boxSize * 0.58f, mouthY + boxSize * 0.06f)
+        when (expression) {
+            FaceExpression.Happy -> {
+                dotEyes()
+                canvas.drawArc(mouth, 20f, 140f, false, strokePaint)
+            }
+
+            FaceExpression.Excited -> {
+                listOf(left, right).forEach { x ->
+                    canvas.drawLine(x - eye, eyeY + eye / 2, x, eyeY - eye / 2, strokePaint)
+                    canvas.drawLine(x, eyeY - eye / 2, x + eye, eyeY + eye / 2, strokePaint)
+                }
+                canvas.drawArc(mouth, 0f, 180f, true, fillPaint)
+            }
+
+            FaceExpression.Sleepy -> {
+                flatEyes()
+                canvas.drawCircle(boxSize / 2, mouthY, boxSize * 0.02f, fillPaint)
+            }
+
+            FaceExpression.Dozing -> {
+                flatEyes()
+                canvas.drawArc(mouth, 40f, 100f, false, strokePaint)
+            }
+
+            FaceExpression.Lonely -> {
+                dotEyes()
+                mouth.offset(0f, boxSize * 0.05f)
+                canvas.drawArc(mouth, 200f, 140f, false, strokePaint)
+            }
+
+            FaceExpression.Busy -> {
+                dotEyes()
+                canvas.drawLine(boxSize * 0.44f, mouthY, boxSize * 0.56f, mouthY, strokePaint)
+            }
+        }
+        strokePaint.strokeCap = Paint.Cap.BUTT
     }
 
     /** Fills the shape with [art], centre-cropped, in place of the glossy gradient. */

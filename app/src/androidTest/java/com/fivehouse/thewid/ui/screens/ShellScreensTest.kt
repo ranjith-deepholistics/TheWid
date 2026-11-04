@@ -1,11 +1,16 @@
 package com.fivehouse.thewid.ui.screens
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.fivehouse.thewid.data.personal.Decision
 import com.fivehouse.thewid.data.status.AlertsStatus
 import com.fivehouse.thewid.ui.components.ScreenPreview
 import com.fivehouse.thewid.ui.shell.WidgetCategory
@@ -99,6 +104,24 @@ class ShellScreensTest {
         rule.onNodeWithText("Counting 2 new right now").assertIsDisplayed()
         rule.onNodeWithText("Add to home screen").performClick()
         assertTrue(added)
+    }
+
+    @Test
+    fun decideSavesOnlyOnceTwoOptionsAreFilled() {
+        var saved: Decision? = null
+        rule.setContent { ScreenPreview(Atmosphere.Peach) { DecideSetupScreen(Decision(), {}) { saved = it } } }
+        rule.onNodeWithText("Save").assertIsNotEnabled()
+        rule.onAllNodesWithText("An option")[0].performTextInput("Dosa")
+        rule.onAllNodesWithText("An option")[0].performTextInput("Pizza")
+        rule.onNodeWithText("Save").assertIsEnabled().performClick()
+        assertEquals(listOf("Dosa", "Pizza"), saved?.options?.map { it.label })
+    }
+
+    @Test
+    fun breatheCompleteShowsTodaysCount() {
+        rule.setContent { ScreenPreview(Atmosphere.Mint) { BreatheCompleteScreen(3, {}, {}) } }
+        rule.onNodeWithText("Well breathed.").assertIsDisplayed()
+        rule.onNodeWithText("3").assertIsDisplayed()
     }
 
     @Test

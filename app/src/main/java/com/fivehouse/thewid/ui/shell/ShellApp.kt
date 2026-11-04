@@ -6,14 +6,20 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
+import android.net.Uri
 import android.os.PowerManager
+import android.provider.ContactsContract
 import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -28,11 +34,16 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.fivehouse.thewid.R
+import com.fivehouse.thewid.data.personal.MAX_PEOPLE
+import com.fivehouse.thewid.data.personal.Person
+import com.fivehouse.thewid.data.personal.PersonShapes
 import com.fivehouse.thewid.data.settings.AppPreferences
 import com.fivehouse.thewid.data.status.platform.NotificationAccess
 import com.fivehouse.thewid.ui.catalog.FoundationCatalogRoute
@@ -40,10 +51,15 @@ import com.fivehouse.thewid.ui.components.AtmosphereBackground
 import com.fivehouse.thewid.ui.screens.AboutScreen
 import com.fivehouse.thewid.ui.screens.AddByHandScreen
 import com.fivehouse.thewid.ui.screens.AddedScreen
+import com.fivehouse.thewid.ui.screens.BreatheCompleteScreen
+import com.fivehouse.thewid.ui.screens.BreatheSessionScreen
 import com.fivehouse.thewid.ui.screens.CategoryScreen
 import com.fivehouse.thewid.ui.screens.CustomizeScreen
+import com.fivehouse.thewid.ui.screens.DecideSetupScreen
 import com.fivehouse.thewid.ui.screens.HeroPickerScreen
+import com.fivehouse.thewid.ui.screens.InnerCircleSetupScreen
 import com.fivehouse.thewid.ui.screens.LibraryScreen
+import com.fivehouse.thewid.ui.screens.MochiSetupScreen
 import com.fivehouse.thewid.ui.screens.MyWidgetsScreen
 import com.fivehouse.thewid.ui.screens.OnboardingScreen
 import com.fivehouse.thewid.ui.screens.PermissionScreen
@@ -52,6 +68,7 @@ import com.fivehouse.thewid.ui.screens.PreviewSize
 import com.fivehouse.thewid.ui.screens.SearchScreen
 import com.fivehouse.thewid.ui.screens.SettingsScreen
 import com.fivehouse.thewid.ui.screens.SplashScreen
+import com.fivehouse.thewid.ui.screens.WeekSetupScreen
 import com.fivehouse.thewid.ui.shapes.ShapeCatalog
 import com.fivehouse.thewid.ui.theme.Atmosphere
 import com.fivehouse.thewid.ui.theme.ShapesTheme
@@ -59,6 +76,8 @@ import com.fivehouse.thewid.ui.widgetconfig.WidgetConfigureActivity
 import com.fivehouse.thewid.widget.StatusFace
 import com.fivehouse.thewid.widget.StatusWidgetKind
 import com.fivehouse.thewid.widget.WidgetPinning
+import java.time.LocalDate
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.serialization.Serializable
 
 @Serializable private data object SplashRoute
@@ -72,6 +91,10 @@ import kotlinx.serialization.Serializable
 @Serializable private data class CustomizeRoute(val kind: String)
 
 @Serializable private data class PermissionRoute(val kind: String)
+
+@Serializable private data class SetupRoute(val kind: String)
+
+@Serializable private data object BreatheRoute
 
 @Serializable private data class AddedRoute(val kind: String)
 
@@ -92,7 +115,7 @@ import kotlinx.serialization.Serializable
 private fun kindNamed(name: String) = StatusWidgetKind.valueOf(name)
 
 @Composable
-fun ShellApp(viewModel: ShellViewModel = hiltViewModel()) {
+fun ShellApp(openRequest: MutableStateFlow<StatusWidgetKind?>, viewModel: ShellViewModel = hiltViewModel()) {
     val nav = rememberNavController()
     val loaded by viewModel.preferences.collectAsStateWithLifecycle()
     val prefs = loaded ?: AppPreferences()
@@ -112,10 +135,22 @@ fun ShellApp(viewModel: ShellViewModel = hiltViewModel()) {
 
     // Permission is only ever asked for here, after someone taps a widget that needs it.
     val toCustomize: (StatusWidgetKind) -> Unit = { kind ->
-        if (kind.needsNotificationAccess && !notificationAccess) {
-            nav.navigate(PermissionRoute(kind.name))
-        } else {
-            nav.navigate(CustomizeRoute(kind.name))
+        when {
+            kind.needsNotificationAccess && !notificationAccess -> nav.navigate(PermissionRoute(kind.name))
+            kind.needsSetup -> nav.navigate(SetupRoute(kind.name))
+            else -> nav.navigate(CustomizeRoute(kind.name))
+        }
+    }
+
+    // A widget asked to open its screen. Waits for the splash to route so it isn't popped with it.
+    val request by openRequest.collectAsStateWithLifecycle()
+    val entry by nav.currentBackStackEntryAsState()
+    val pastSplash = entry?.destination?.let { !it.hasRoute<SplashRoute>() && !it.hasRoute<OnboardingRoute>() } == true
+    LaunchedEffect(request, pastSplash) {
+        val kind = request
+        if (kind != null && pastSplash) {
+            openRequest.value = null
+            if (kind == StatusWidgetKind.Breathe) nav.navigate(BreatheRoute) else nav.navigate(SetupRoute(kind.name))
         }
     }
 
@@ -163,6 +198,49 @@ fun ShellApp(viewModel: ShellViewModel = hiltViewModel()) {
         composable<CustomizeRoute> { entry ->
             val kind = kindNamed(entry.toRoute<CustomizeRoute>().kind)
             Hosted(Atmosphere.Moss, prefs) { CustomizeDestination(kind, viewModel, nav) }
+        }
+        composable<SetupRoute> { backStack ->
+            val kind = kindNamed(backStack.toRoute<SetupRoute>().kind)
+            val toAdd = {
+                nav.navigate(CustomizeRoute(kind.name)) { popUpTo<SetupRoute> { inclusive = true } }
+            }
+            val default = when (kind) {
+                StatusWidgetKind.InnerCircle -> Atmosphere.DuskBloom
+                StatusWidgetKind.Decide -> Atmosphere.Peach
+                else -> Atmosphere.Stone
+            }
+            Hosted(default, prefs) {
+                when (kind) {
+                    StatusWidgetKind.Week -> {
+                        val events by viewModel.events.collectAsStateWithLifecycle()
+                        WeekSetupScreen(events, viewModel::setEvents, nav::goBack, toAdd)
+                    }
+
+                    StatusWidgetKind.InnerCircle -> InnerCircleDestination(viewModel, nav, toAdd)
+
+                    StatusWidgetKind.Decide -> {
+                        val decision by viewModel.decision.collectAsStateWithLifecycle()
+                        DecideSetupScreen(decision, nav::goBack) { saved ->
+                            viewModel.setDecision(saved)
+                            toAdd()
+                        }
+                    }
+
+                    else -> {
+                        val mochi by viewModel.mochi.collectAsStateWithLifecycle()
+                        MochiSetupScreen(mochi, faces[StatusWidgetKind.Mochi]) { saved ->
+                            viewModel.setMochi(saved)
+                            toAdd()
+                        }
+                    }
+                }
+            }
+        }
+        composable<BreatheRoute> {
+            val log by viewModel.breathe.collectAsStateWithLifecycle()
+            Hosted(Atmosphere.Mint, prefs) {
+                BreatheDestination(log.sessionsOn(LocalDate.now()), viewModel::logBreatheSession, nav::goBack)
+            }
         }
         composable<PermissionRoute> { entry ->
             val kind = kindNamed(entry.toRoute<PermissionRoute>().kind)
@@ -294,8 +372,56 @@ private fun CustomizeDestination(kind: StatusWidgetKind, viewModel: ShellViewMod
         onAdd = {
             val asked = WidgetPinning.isSupported(context) && WidgetPinning.request(context, kind, shape, glow)
             if (!asked) nav.navigate(AddByHandRoute(kind.name))
-        }
+        },
+        onStartSession = if (kind == StatusWidgetKind.Breathe) ({ nav.navigate(BreatheRoute) }) else null
     )
+}
+
+/** Picks through the system's contact picker, which needs no contacts permission. */
+@Composable
+private fun InnerCircleDestination(viewModel: ShellViewModel, nav: NavController, onSaved: () -> Unit) {
+    val context = LocalContext.current
+    val people by viewModel.people.collectAsStateWithLifecycle()
+    val pick = rememberLauncherForActivityResult(ActivityResultContracts.PickContact()) { uri ->
+        val name = uri?.let(context::displayNameOf) ?: return@rememberLauncherForActivityResult
+        val shape = PersonShapes[people.size % PersonShapes.size]
+        viewModel.setPeople((people + Person(uri.toString(), name, shape)).take(MAX_PEOPLE))
+    }
+    InnerCircleSetupScreen(
+        people = people,
+        onAddPerson = { pick.launch(null) },
+        onChange = viewModel::setPeople,
+        onBack = nav::goBack,
+        onSave = onSaved
+    )
+}
+
+private fun Context.displayNameOf(uri: Uri): String? = try {
+    contentResolver.query(uri, arrayOf(ContactsContract.Contacts.DISPLAY_NAME), null, null, null)?.use { cursor ->
+        if (cursor.moveToFirst()) cursor.getString(0) else null
+    }
+} catch (_: SecurityException) {
+    null // The picker's one-time read grant didn't cover this provider.
+}
+
+/** Screens 32 and 22. The session is logged once, when it finishes. */
+@Composable
+private fun BreatheDestination(sessionsToday: Int, onFinished: () -> Unit, onDone: () -> Unit) {
+    var run by rememberSaveable { mutableIntStateOf(0) }
+    var complete by rememberSaveable { mutableStateOf(false) }
+    if (complete) {
+        BreatheCompleteScreen(sessionsToday, onAgain = {
+            run++
+            complete = false
+        }, onDone = onDone)
+    } else {
+        key(run) {
+            BreatheSessionScreen(onBack = onDone, onFinished = {
+                onFinished()
+                complete = true
+            })
+        }
+    }
 }
 
 /** Screens 6, 11 and 12. Returning from system settings decides whether it was granted or still off. */

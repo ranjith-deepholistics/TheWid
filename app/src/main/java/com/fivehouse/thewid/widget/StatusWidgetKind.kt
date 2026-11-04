@@ -68,7 +68,15 @@ enum class StatusWidgetKind(
         NowPlayingWidgetReceiver::class,
         emptyList(),
         needsNotificationAccess = true
-    );
+    ),
+    Week(R.string.widget_week, WeekWidgetReceiver::class, emptyList()),
+    InnerCircle(R.string.widget_inner_circle, InnerCircleWidgetReceiver::class, emptyList()),
+    Decide(R.string.widget_decide, DecideWidgetReceiver::class, emptyList()),
+    Mochi(R.string.widget_mochi, MochiWidgetReceiver::class, emptyList()),
+    Breathe(R.string.widget_breathe, BreatheWidgetReceiver::class, emptyList());
+
+    /** These open a setup screen before Customize, because they show nothing until they're filled in. */
+    val needsSetup: Boolean get() = this == Week || this == InnerCircle || this == Decide || this == Mochi
 
     fun newWidget(): StatusWidget = when (this) {
         Battery -> BatteryWidget()
@@ -79,6 +87,11 @@ enum class StatusWidgetKind(
         Time -> TimeWidget()
         Alerts -> AlertsWidget()
         NowPlaying -> NowPlayingWidget()
+        Week -> WeekWidget()
+        InnerCircle -> InnerCircleWidget()
+        Decide -> DecideWidget()
+        Mochi -> MochiWidget()
+        Breathe -> BreatheWidget()
     }
 
     companion object {
@@ -117,4 +130,24 @@ class AlertsWidgetReceiver : GlanceAppWidgetReceiver() {
 
 class NowPlayingWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget = StatusWidgetKind.NowPlaying.newWidget()
+}
+
+class WeekWidgetReceiver : GlanceAppWidgetReceiver() {
+    override val glanceAppWidget = StatusWidgetKind.Week.newWidget()
+}
+
+class InnerCircleWidgetReceiver : GlanceAppWidgetReceiver() {
+    override val glanceAppWidget = StatusWidgetKind.InnerCircle.newWidget()
+}
+
+class DecideWidgetReceiver : GlanceAppWidgetReceiver() {
+    override val glanceAppWidget = StatusWidgetKind.Decide.newWidget()
+}
+
+class MochiWidgetReceiver : GlanceAppWidgetReceiver() {
+    override val glanceAppWidget = StatusWidgetKind.Mochi.newWidget()
+}
+
+class BreatheWidgetReceiver : GlanceAppWidgetReceiver() {
+    override val glanceAppWidget = StatusWidgetKind.Breathe.newWidget()
 }

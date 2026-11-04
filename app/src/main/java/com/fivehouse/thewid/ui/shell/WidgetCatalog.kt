@@ -30,12 +30,12 @@ enum class CatalogWidget(
         StatusWidgetKind.NowPlaying,
         needsPermission = true
     ),
-    Week(R.string.widget_week, ShapeCatalog.Diamond),
-    Mochi(R.string.widget_mochi, ShapeCatalog.Puffy),
-    Breathe(R.string.widget_breathe, ShapeCatalog.Flower),
+    Week(R.string.widget_week, ShapeCatalog.Diamond, StatusWidgetKind.Week),
+    Mochi(R.string.widget_mochi, ShapeCatalog.Puffy, StatusWidgetKind.Mochi),
+    Breathe(R.string.widget_breathe, ShapeCatalog.Flower, StatusWidgetKind.Breathe),
     HeartPulse(R.string.widget_heart_pulse, ShapeCatalog.Heart, needsPermission = true),
-    InnerCircle(R.string.widget_inner_circle, ShapeCatalog.Heart),
-    Decide(R.string.widget_decide, ShapeCatalog.Cookie9Sided)
+    InnerCircle(R.string.widget_inner_circle, ShapeCatalog.Heart, StatusWidgetKind.InnerCircle),
+    Decide(R.string.widget_decide, ShapeCatalog.Cookie9Sided, StatusWidgetKind.Decide)
 }
 
 enum class WidgetCategory(

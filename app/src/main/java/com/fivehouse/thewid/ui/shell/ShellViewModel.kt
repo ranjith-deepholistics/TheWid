@@ -1,7 +1,14 @@
 package com.fivehouse.thewid.ui.shell
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.fivehouse.thewid.data.personal.BreatheLog
+import com.fivehouse.thewid.data.personal.Decision
+import com.fivehouse.thewid.data.personal.MochiSettings
+import com.fivehouse.thewid.data.personal.Person
+import com.fivehouse.thewid.data.personal.PersonalRepository
+import com.fivehouse.thewid.data.personal.WeekEvent
 import com.fivehouse.thewid.data.settings.AppPreferences
 import com.fivehouse.thewid.data.settings.AppPreferencesRepository
 import com.fivehouse.thewid.data.settings.ThemeChoice
@@ -12,7 +19,10 @@ import com.fivehouse.thewid.widget.PlacedWidgets
 import com.fivehouse.thewid.widget.StatusFace
 import com.fivehouse.thewid.widget.StatusFaces
 import com.fivehouse.thewid.widget.StatusWidgetKind
+import com.fivehouse.thewid.widget.WidgetRefresh
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
+import java.time.LocalDate
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,7 +40,9 @@ private const val STOP_TIMEOUT_MS = 5_000L
 class ShellViewModel @Inject constructor(
     private val preferencesRepository: AppPreferencesRepository,
     private val statusFaces: StatusFaces,
-    private val placedWidgets: PlacedWidgets
+    private val placedWidgets: PlacedWidgets,
+    private val personal: PersonalRepository,
+    @param:ApplicationContext private val context: Context
 ) : ViewModel() {
     /** Null until read from disk, so the splash knows when it can route. */
     val preferences: StateFlow<AppPreferences?> = preferencesRepository.preferences
@@ -48,6 +60,37 @@ class ShellViewModel @Inject constructor(
 
     fun refreshPlaced() {
         viewModelScope.launch { placedState.value = placedWidgets.load() }
+    }
+
+    val events = personal.events.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), emptyList())
+    val people = personal.people.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), emptyList())
+    val decision = personal.decision.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
+        Decision()
+    )
+    val mochi = personal.mochi.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), MochiSettings())
+    val breathe = personal.breathe.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
+        BreatheLog()
+    )
+
+    fun setEvents(value: List<WeekEvent>) = updatePersonal { setEvents(value) }
+
+    fun setPeople(value: List<Person>) = updatePersonal { setPeople(value) }
+
+    fun setDecision(value: Decision) = updatePersonal { setDecision(value) }
+
+    fun setMochi(value: MochiSettings) = updatePersonal { setMochi(value) }
+
+    fun logBreatheSession() = updatePersonal { logBreatheSession(LocalDate.now()) }
+
+    private fun updatePersonal(change: suspend PersonalRepository.() -> Unit) {
+        viewModelScope.launch {
+            personal.change()
+            WidgetRefresh.refreshNow(context)
+        }
     }
 
     fun finishOnboarding() = update { setOnboardingDone() }

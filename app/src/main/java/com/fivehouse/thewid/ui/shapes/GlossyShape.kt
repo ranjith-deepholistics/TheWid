@@ -64,6 +64,7 @@ fun GlossyShape(
     castShadow: Boolean = false,
     clock: ClockMarks? = null,
     art: Bitmap? = null,
+    expression: FaceExpression? = null,
     content: @Composable BoxScope.() -> Unit = {}
 ) {
     val morphState = remember { ShapeMorphState(shape) }
@@ -96,7 +97,9 @@ fun GlossyShape(
                         height = size.height,
                         spec = ShapePaintSpec(animatedFill, surface, tint, outlineColor, castShadow, art)
                     )
-                    if (clock != null) painter.drawClock(canvas.nativeCanvas, minOf(size.width, size.height), clock)
+                    val box = minOf(size.width, size.height)
+                    if (clock != null) painter.drawClock(canvas.nativeCanvas, box, clock)
+                    if (expression != null) painter.drawExpression(canvas.nativeCanvas, box, expression)
                 }
             },
         contentAlignment = Alignment.Center,

@@ -24,6 +24,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -78,7 +79,8 @@ fun CustomizeScreen(
     onSizeChange: (PreviewSize) -> Unit,
     onGlowChange: (Boolean) -> Unit,
     onAdd: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onStartSession: (() -> Unit)? = null
 ) {
     Column(
         modifier
@@ -138,6 +140,11 @@ fun CustomizeScreen(
                 ),
                 style = MaterialTheme.typography.bodySmall
             )
+        }
+        if (onStartSession != null) {
+            TextButton(onClick = onStartSession, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.breathe_start))
+            }
         }
         PrimaryPill(stringResource(R.string.customize_add), onAdd)
     }
