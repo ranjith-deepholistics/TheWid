@@ -19,6 +19,8 @@ import com.fivehouse.thewid.data.status.AlertsSource
 import com.fivehouse.thewid.data.status.MediaSnapshot
 import com.fivehouse.thewid.data.status.NowPlayingSource
 import com.fivehouse.thewid.data.status.countsAsAlert
+import com.fivehouse.thewid.heartpulse.HeartPulse
+import com.fivehouse.thewid.heartpulse.PulseTrigger
 import com.fivehouse.thewid.widget.StatusWidgetKind
 import com.fivehouse.thewid.widget.statusFaces
 import kotlinx.coroutines.CoroutineScope
@@ -75,7 +77,16 @@ class ShapesNotificationListener : NotificationListenerService() {
         messageSenders.value = emptyList()
     }
 
-    override fun onNotificationPosted(sbn: StatusBarNotification) = recount()
+    override fun onNotificationPosted(sbn: StatusBarNotification) {
+        recount()
+        val counts = countsAsAlert(
+            isOngoing = sbn.isOngoing,
+            isClearable = sbn.isClearable,
+            isGroupSummary = sbn.notification.flags and Notification.FLAG_GROUP_SUMMARY != 0,
+            isOwn = sbn.packageName == packageName
+        )
+        if (counts) HeartPulse.trigger(this, PulseTrigger.Notification)
+    }
 
     override fun onNotificationRemoved(sbn: StatusBarNotification) = recount()
 

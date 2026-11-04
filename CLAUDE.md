@@ -37,5 +37,6 @@ Product spec, design tokens and build phases: @SHAPES_BUILD_SPEC.md
 - The notification listener counts, and reads only the title of message notifications to match Inner Circle names, in memory. Never read a notification's text or save sender names: the permission screen promises this.
 - Build everything the mockups show. A feature that needs a permission gets an `AccessRequest` ask flow, shown only after someone taps it. Adding a person needs no permission (the system contact picker); calling or messaging them asks for contacts.
 - Steps, Water, Sleep and the Today screen (mockups 27, 29, 30) are future work, listed in the spec. Don't build them yet.
+- Heart Pulse shows a small untouchable window per beat, not a permanent foreground service, so there's no always-on notification. Keep its window alpha at 0.8 or below, or Android blocks touches through it.
 - Paint alpha multiplies a shader. Reset it before setting a shader on a reused `Paint`.
 - Dark atmospheres use a dimmer glass tile than the spec's values (8% fill, 20% border), following the Moss mockups. Light atmospheres use the spec's values.

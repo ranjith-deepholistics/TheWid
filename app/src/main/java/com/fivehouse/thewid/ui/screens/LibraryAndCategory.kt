@@ -285,7 +285,9 @@ fun CategoryScreen(
     faces: Map<StatusWidgetKind, StatusFace>,
     onBack: () -> Unit,
     onWidgetClick: (StatusWidgetKind) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    heartPulseOn: Boolean = false,
+    onHeartPulseClick: () -> Unit = {}
 ) {
     Column(
         modifier
@@ -315,7 +317,14 @@ fun CategoryScreen(
         category.widgets.chunked(2).forEach { row ->
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 row.forEach { widget ->
-                    CatalogTile(widget, widget.kind?.let { faces[it] }, onWidgetClick, Modifier.weight(1f))
+                    CatalogTile(
+                        widget,
+                        widget.kind?.let { faces[it] },
+                        heartPulseOn,
+                        onWidgetClick,
+                        onHeartPulseClick,
+                        Modifier.weight(1f)
+                    )
                 }
                 if (row.size == 1) Spacer(Modifier.weight(1f))
             }
@@ -327,14 +336,14 @@ fun CategoryScreen(
 private fun CatalogTile(
     widget: CatalogWidget,
     face: StatusFace?,
+    heartPulseOn: Boolean,
     onClick: (StatusWidgetKind) -> Unit,
+    onHeartPulseClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val kind = widget.kind
-    val clickable = if (kind != null) {
-        Modifier.clickable(role = Role.Button) { onClick(kind) }
-    } else {
-        Modifier
+    val clickable = Modifier.clickable(role = Role.Button) {
+        if (kind != null) onClick(kind) else onHeartPulseClick()
     }
     GlassTile(
         modifier
@@ -346,17 +355,25 @@ private fun CatalogTile(
             if (face != null) {
                 FaceShape(face, null, Modifier.size(64.dp))
             } else {
-                GlossyShape(widget.shape, null, Modifier.size(64.dp), surface = ShapeSurface.Dashed)
+                GlossyShape(
+                    widget.shape,
+                    null,
+                    Modifier.size(64.dp),
+                    surface = if (heartPulseOn) ShapeSurface.Glossy else ShapeSurface.Dashed
+                )
             }
             Spacer(Modifier.weight(1f))
             if (face != null) {
                 FaceValueText(face)
             } else {
-                Text(stringResource(R.string.soon), style = MaterialTheme.typography.labelMedium)
+                Text(
+                    stringResource(if (heartPulseOn) R.string.heart_pulse_on else R.string.heart_pulse_off),
+                    style = Numerals.Medium
+                )
             }
             Text(stringResource(widget.label), style = MaterialTheme.typography.bodySmall)
         }
-        if (widget.needsPermission && (face == null || face.needsAccess)) {
+        if (widget.needsPermission && (face?.needsAccess == true || (face == null && !heartPulseOn))) {
             Icon(
                 painterResource(R.drawable.ic_lock),
                 null,

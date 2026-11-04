@@ -51,6 +51,8 @@ import com.fivehouse.thewid.data.personal.messagesPerPerson
 import com.fivehouse.thewid.data.settings.AppPreferences
 import com.fivehouse.thewid.data.status.platform.NotificationAccess
 import com.fivehouse.thewid.data.status.platform.ShapesNotificationListener
+import com.fivehouse.thewid.heartpulse.HeartPulse
+import com.fivehouse.thewid.heartpulse.PulseTrigger
 import com.fivehouse.thewid.ui.catalog.FoundationCatalogRoute
 import com.fivehouse.thewid.ui.components.AtmosphereBackground
 import com.fivehouse.thewid.ui.screens.AboutScreen
@@ -65,6 +67,7 @@ import com.fivehouse.thewid.ui.screens.CustomizeScreen
 import com.fivehouse.thewid.ui.screens.DecidePage
 import com.fivehouse.thewid.ui.screens.DecideSetupScreen
 import com.fivehouse.thewid.ui.screens.FocusPage
+import com.fivehouse.thewid.ui.screens.HeartPulseScreen
 import com.fivehouse.thewid.ui.screens.HeroPickerScreen
 import com.fivehouse.thewid.ui.screens.InnerCirclePage
 import com.fivehouse.thewid.ui.screens.InnerCircleSetupScreen
@@ -122,6 +125,8 @@ import kotlinx.serialization.Serializable
 
 @Serializable private data class AccessRoute(val request: String)
 
+@Serializable private data object HeartPulseRoute
+
 @Serializable private data class AddedRoute(val kind: String)
 
 @Serializable private data class AddByHandRoute(val kind: String)
@@ -173,6 +178,9 @@ fun ShellApp(openRequest: MutableStateFlow<StatusWidgetKind?>, viewModel: ShellV
     val notificationAccess by NotificationAccess.granted.collectAsStateWithLifecycle()
 
     // Permission is only ever asked for here, after someone taps a widget that needs it.
+    val heartPulseSettings by viewModel.heartPulse.collectAsStateWithLifecycle()
+    val heartPulseIsOn = heartPulseSettings.enabled && AccessRequest.Overlay.isGranted(context)
+
     val toCustomize: (StatusWidgetKind) -> Unit = { kind ->
         when {
             kind.needsNotificationAccess && !notificationAccess -> nav.navigate(PermissionRoute(kind.name))
@@ -231,7 +239,14 @@ fun ShellApp(openRequest: MutableStateFlow<StatusWidgetKind?>, viewModel: ShellV
         composable<CategoryRoute> { entry ->
             val category = WidgetCategory.valueOf(entry.toRoute<CategoryRoute>().category)
             Hosted(Atmosphere.Mint, prefs) {
-                CategoryScreen(category, faces, nav::goBack, toCustomize)
+                CategoryScreen(
+                    category,
+                    faces,
+                    nav::goBack,
+                    toCustomize,
+                    heartPulseOn = heartPulseIsOn,
+                    onHeartPulseClick = { nav.navigate(HeartPulseRoute) }
+                )
             }
         }
         composable<CustomizeRoute> { entry ->
@@ -282,6 +297,9 @@ fun ShellApp(openRequest: MutableStateFlow<StatusWidgetKind?>, viewModel: ShellV
         }
         composable<FocusRoute> {
             Hosted(Atmosphere.DuskBloom, prefs) { FocusDestination(viewModel, nav) }
+        }
+        composable<HeartPulseRoute> {
+            Hosted(Atmosphere.Night, prefs) { HeartPulseDestination(viewModel, nav) }
         }
         composable<AccessRoute> { backStack ->
             val request = AccessRequest.valueOf(backStack.toRoute<AccessRoute>().request)
@@ -337,7 +355,13 @@ fun ShellApp(openRequest: MutableStateFlow<StatusWidgetKind?>, viewModel: ShellV
         composable<BreatheRoute> {
             val log by viewModel.breathe.collectAsStateWithLifecycle()
             Hosted(Atmosphere.Mint, prefs) {
-                BreatheDestination(log.sessionsOn(LocalDate.now()), viewModel::logBreatheSession, nav::goBack)
+                BreatheDestination(
+                    sessionsToday = log.sessionsOn(LocalDate.now()),
+                    heartPulseOn = heartPulseIsOn && heartPulseSettings.duringBreathe,
+                    onBreathChange = { HeartPulse.trigger(context, PulseTrigger.Breathe) },
+                    onFinished = viewModel::logBreatheSession,
+                    onDone = nav::goBack
+                )
             }
         }
         composable<PermissionRoute> { entry ->
@@ -414,7 +438,8 @@ fun ShellApp(openRequest: MutableStateFlow<StatusWidgetKind?>, viewModel: ShellV
                         viewModel.addRecent(kind)
                         toCustomize(kind)
                     },
-                    onSettingClick = { nav.navigate(SettingsRoute) }
+                    onSettingClick = { nav.navigate(SettingsRoute) },
+                    onHeartPulseClick = { nav.navigate(HeartPulseRoute) }
                 )
             }
         }
@@ -487,6 +512,55 @@ private fun CustomizeDestination(kind: StatusWidgetKind, viewModel: ShellViewMod
     )
 }
 
+/** Screen 8. Turning on asks for the overlay permission, then finishes turning on when it returns. */
+@Composable
+private fun HeartPulseDestination(viewModel: ShellViewModel, nav: NavController) {
+    val context = LocalContext.current
+    val settings by viewModel.heartPulse.collectAsStateWithLifecycle()
+    val notificationAccess by NotificationAccess.granted.collectAsStateWithLifecycle()
+    var wantsOn by rememberSaveable { mutableStateOf(false) }
+    var canDraw by remember { mutableStateOf(AccessRequest.Overlay.isGranted(context)) }
+    val latest by rememberUpdatedState(settings)
+    LifecycleResumeEffect(Unit) {
+        canDraw = AccessRequest.Overlay.isGranted(context)
+        NotificationAccess.refresh(context)
+        if (wantsOn) {
+            wantsOn = false
+            if (canDraw) {
+                viewModel.setHeartPulse(latest.copy(enabled = true))
+                HeartPulse.trigger(context, PulseTrigger.Test)
+            }
+        }
+        onPauseOrDispose {}
+    }
+    HeartPulseScreen(
+        settings = settings,
+        canDrawOverlays = canDraw,
+        hasNotificationAccess = notificationAccess,
+        onChange = viewModel::setHeartPulse,
+        onNotificationToggle = { on ->
+            if (on && !notificationAccess) {
+                viewModel.setHeartPulse(settings.copy(onNotification = true))
+                nav.navigate(PermissionRoute(StatusWidgetKind.Alerts.name))
+            } else {
+                viewModel.setHeartPulse(settings.copy(onNotification = on))
+            }
+        },
+        onTurnOn = {
+            if (canDraw) {
+                viewModel.setHeartPulse(settings.copy(enabled = true))
+                HeartPulse.trigger(context, PulseTrigger.Test)
+            } else {
+                wantsOn = true
+                nav.navigate(AccessRoute(AccessRequest.Overlay.name))
+            }
+        },
+        onTurnOff = { viewModel.setHeartPulse(settings.copy(enabled = false)) },
+        onTest = { HeartPulse.trigger(context, PulseTrigger.Test) },
+        onBack = nav::goBack
+    )
+}
+
 /** Asks only when someone taps a feature that needs it. Coming back from settings re-checks. */
 @Composable
 private fun AccessDestination(request: AccessRequest, nav: NavController) {
@@ -506,14 +580,7 @@ private fun AccessDestination(request: AccessRequest, nav: NavController) {
     }
     val openSystemSettings = {
         asked = true
-        val packageUri = "package:${context.packageName}".toUri()
-        context.startActivity(
-            if (request.permission == null) {
-                Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, packageUri)
-            } else {
-                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, packageUri)
-            }
-        )
+        context.startActivity(Intent(request.settingsAction, "package:${context.packageName}".toUri()))
     }
     AccessScreen(
         request = request,
@@ -711,20 +778,36 @@ private fun Context.displayNameOf(uri: Uri): String? = try {
 
 /** Screens 32 and 22. The session is logged once, when it finishes. */
 @Composable
-private fun BreatheDestination(sessionsToday: Int, onFinished: () -> Unit, onDone: () -> Unit) {
+private fun BreatheDestination(
+    sessionsToday: Int,
+    heartPulseOn: Boolean,
+    onBreathChange: () -> Unit,
+    onFinished: () -> Unit,
+    onDone: () -> Unit
+) {
     var run by rememberSaveable { mutableIntStateOf(0) }
     var complete by rememberSaveable { mutableStateOf(false) }
     if (complete) {
-        BreatheCompleteScreen(sessionsToday, onAgain = {
-            run++
-            complete = false
-        }, onDone = onDone)
+        BreatheCompleteScreen(
+            sessionsToday,
+            onAgain = {
+                run++
+                complete = false
+            },
+            onDone = onDone,
+            heartPulseOn = heartPulseOn
+        )
     } else {
         key(run) {
-            BreatheSessionScreen(onBack = onDone, onFinished = {
-                onFinished()
-                complete = true
-            })
+            BreatheSessionScreen(
+                onBack = onDone,
+                onFinished = {
+                    onFinished()
+                    complete = true
+                },
+                heartPulseOn = heartPulseOn,
+                onBreathChange = onBreathChange
+            )
         }
     }
 }
@@ -775,10 +858,12 @@ private fun SettingsDestination(prefs: AppPreferences, viewModel: ShellViewModel
     val notificationsAllowed by NotificationAccess.granted.collectAsStateWithLifecycle()
     val useCalendar by viewModel.useCalendar.collectAsStateWithLifecycle()
     var wantsCalendar by rememberSaveable { mutableStateOf(false) }
+    var overlayAllowed by remember { mutableStateOf(AccessRequest.Overlay.isGranted(context)) }
     var backgroundAllowed by remember { mutableStateOf(context.isBackgroundAllowed()) }
     LifecycleResumeEffect(Unit) {
         NotificationAccess.refresh(context)
         backgroundAllowed = context.isBackgroundAllowed()
+        overlayAllowed = AccessRequest.Overlay.isGranted(context)
         if (wantsCalendar) {
             wantsCalendar = false
             if (AccessRequest.Calendar.isGranted(context)) viewModel.setUseCalendar(true)
@@ -790,6 +875,7 @@ private fun SettingsDestination(prefs: AppPreferences, viewModel: ShellViewModel
         theme = prefs.theme,
         atmosphere = prefs.atmosphere,
         notificationsAllowed = notificationsAllowed,
+        overlayAllowed = overlayAllowed,
         calendarOn = useCalendar,
         backgroundAllowed = backgroundAllowed,
         version = context.versionName(),
@@ -804,6 +890,7 @@ private fun SettingsDestination(prefs: AppPreferences, viewModel: ShellViewModel
                 nav.navigate(PermissionRoute(StatusWidgetKind.Alerts.name))
             }
         },
+        onOverlayClick = { nav.navigate(HeartPulseRoute) },
         onCalendarClick = {
             when {
                 useCalendar -> viewModel.setUseCalendar(false)

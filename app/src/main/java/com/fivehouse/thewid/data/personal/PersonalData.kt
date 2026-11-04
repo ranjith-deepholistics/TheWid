@@ -118,6 +118,23 @@ data class BreatheLog(val epochDay: Long = 0, val sessionsToday: Int = 0) {
     fun afterSession(today: LocalDate): BreatheLog = BreatheLog(today.toEpochDay(), sessionsOn(today) + 1)
 }
 
+enum class PulseColor(val argb: Int) {
+    Coral(0xFFFF7A3D.toInt()),
+    Mint(0xFF5FE3B5.toInt()),
+    Lilac(0xFFB6A6E8.toInt()),
+    White(0xFFFFFFFF.toInt())
+}
+
+@Serializable
+data class HeartPulseSettings(
+    val enabled: Boolean = false,
+    val onNotification: Boolean = true,
+    val onCharging: Boolean = true,
+    val duringBreathe: Boolean = true,
+    val everyHour: Boolean = false,
+    val color: PulseColor = PulseColor.Coral
+)
+
 enum class MinuteMarker { Diamond, Circle, None }
 
 /**
@@ -157,6 +174,8 @@ class PersonalRepository @Inject constructor(@param:ApplicationContext private v
     val timeSettings: Flow<TimeSettings> = read(TimeKey, TimeSettings.serializer(), TimeSettings())
     val useCalendar: Flow<Boolean> = read(CalendarKey, Boolean.serializer(), false)
     val focus: Flow<FocusState> = read(FocusKey, FocusState.serializer(), FocusState())
+    val heartPulse: Flow<HeartPulseSettings> =
+        read(HeartPulseKey, HeartPulseSettings.serializer(), HeartPulseSettings())
 
     suspend fun setEvents(value: List<WeekEvent>) = write(EventsKey, ListSerializer(WeekEvent.serializer()), value)
 
@@ -169,6 +188,8 @@ class PersonalRepository @Inject constructor(@param:ApplicationContext private v
     suspend fun setTimeSettings(value: TimeSettings) = write(TimeKey, TimeSettings.serializer(), value)
 
     suspend fun setUseCalendar(value: Boolean) = write(CalendarKey, Boolean.serializer(), value)
+
+    suspend fun setHeartPulse(value: HeartPulseSettings) = write(HeartPulseKey, HeartPulseSettings.serializer(), value)
 
     suspend fun updateFocus(change: (FocusState) -> FocusState) =
         update(FocusKey, FocusState.serializer(), FocusState(), change)
@@ -211,5 +232,6 @@ class PersonalRepository @Inject constructor(@param:ApplicationContext private v
         val TimeKey = stringPreferencesKey("time_settings")
         val CalendarKey = stringPreferencesKey("use_calendar")
         val FocusKey = stringPreferencesKey("focus")
+        val HeartPulseKey = stringPreferencesKey("heart_pulse")
     }
 }

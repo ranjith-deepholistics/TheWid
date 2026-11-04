@@ -48,10 +48,12 @@ import com.fivehouse.thewid.data.personal.SessionMillis
 import com.fivehouse.thewid.data.personal.breathStateAt
 import com.fivehouse.thewid.ui.components.BackButton
 import com.fivehouse.thewid.ui.components.GlassTile
+import com.fivehouse.thewid.ui.components.InfoChip
 import com.fivehouse.thewid.ui.components.PrimaryPill
 import com.fivehouse.thewid.ui.components.ScreenPreview
 import com.fivehouse.thewid.ui.shapes.GlossyShape
 import com.fivehouse.thewid.ui.shapes.ShapeCatalog
+import com.fivehouse.thewid.ui.theme.Accent
 import com.fivehouse.thewid.ui.theme.Atmosphere
 import com.fivehouse.thewid.ui.theme.Numerals
 import kotlin.math.PI
@@ -63,7 +65,13 @@ private const val SMALL_SCALE = 0.72f
 
 /** Screen from concept shot 32. Keeps running time itself so pausing is just not advancing the clock. */
 @Composable
-fun BreatheSessionScreen(onBack: () -> Unit, onFinished: () -> Unit, modifier: Modifier = Modifier) {
+fun BreatheSessionScreen(
+    onBack: () -> Unit,
+    onFinished: () -> Unit,
+    modifier: Modifier = Modifier,
+    heartPulseOn: Boolean = false,
+    onBreathChange: () -> Unit = {}
+) {
     var elapsed by rememberSaveable { mutableLongStateOf(0L) }
     var paused by rememberSaveable { mutableStateOf(false) }
     val view = LocalView.current
@@ -81,7 +89,11 @@ fun BreatheSessionScreen(onBack: () -> Unit, onFinished: () -> Unit, modifier: M
         }
         onFinished()
     }
-    BreatheSessionContent(breathStateAt(elapsed), paused, onBack, { paused = !paused }, modifier)
+    val state = breathStateAt(elapsed)
+    LaunchedEffect(state.round, state.phase, paused) {
+        if (!paused && !state.isComplete) onBreathChange()
+    }
+    BreatheSessionContent(state, paused, onBack, { paused = !paused }, modifier, heartPulseOn)
 }
 
 @Composable
@@ -90,7 +102,8 @@ private fun BreatheSessionContent(
     paused: Boolean,
     onBack: () -> Unit,
     onPauseToggle: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    heartPulseOn: Boolean = false
 ) {
     Column(
         modifier
@@ -122,6 +135,10 @@ private fun BreatheSessionContent(
             ),
             style = MaterialTheme.typography.titleLarge
         )
+        if (heartPulseOn) {
+            Spacer(Modifier.height(12.dp))
+            InfoChip(stringResource(R.string.breathe_heart_chip), border = Accent)
+        }
         Spacer(Modifier.weight(1f))
         Button(onClick = onPauseToggle, shape = CircleShape) {
             Text(stringResource(if (paused) R.string.breathe_resume else R.string.breathe_pause))
@@ -179,7 +196,13 @@ internal fun ProgressTicks(progress: Float, modifier: Modifier = Modifier) {
 
 /** Screen 22: the flower settles into a soft burst. */
 @Composable
-fun BreatheCompleteScreen(sessionsToday: Int, onAgain: () -> Unit, onDone: () -> Unit, modifier: Modifier = Modifier) {
+fun BreatheCompleteScreen(
+    sessionsToday: Int,
+    onAgain: () -> Unit,
+    onDone: () -> Unit,
+    modifier: Modifier = Modifier,
+    heartPulseOn: Boolean = false
+) {
     Column(
         modifier
             .fillMaxSize()
@@ -193,6 +216,9 @@ fun BreatheCompleteScreen(sessionsToday: Int, onAgain: () -> Unit, onDone: () ->
             Icon(painterResource(R.drawable.ic_check), null, Modifier.size(64.dp))
         }
         Text(stringResource(R.string.breathe_done_title), style = MaterialTheme.typography.headlineLarge)
+        if (heartPulseOn) {
+            Text(stringResource(R.string.breathe_heart_done), style = MaterialTheme.typography.bodySmall)
+        }
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Stat("$BREATHE_ROUNDS", R.string.breathe_stat_rounds, Modifier.weight(1f))
             Stat(
@@ -242,4 +268,10 @@ private fun BreathePausedPreview() {
 @Composable
 private fun BreatheCompletePreview() {
     ScreenPreview(Atmosphere.Mint) { BreatheCompleteScreen(3, {}, {}) }
+}
+
+@Preview(name = "With Heart Pulse", widthDp = 390, heightDp = 844)
+@Composable
+private fun BreatheCompleteHeartPreview() {
+    ScreenPreview(Atmosphere.Mint) { BreatheCompleteScreen(3, {}, {}, heartPulseOn = true) }
 }

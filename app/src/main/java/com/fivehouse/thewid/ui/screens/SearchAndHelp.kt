@@ -82,7 +82,8 @@ fun SearchScreen(
     onClose: () -> Unit,
     onWidgetClick: (StatusWidgetKind) -> Unit,
     onSettingClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onHeartPulseClick: () -> Unit = {}
 ) {
     val resources = LocalResources.current
     val widgets = remember(query, resources) { CatalogWidget.entries.matching(query) { resources.getString(it.label) } }
@@ -102,7 +103,7 @@ fun SearchScreen(
         if (widgets.isNotEmpty()) {
             Eyebrow(stringResource(R.string.search_widgets))
             widgets.forEach { widget ->
-                WidgetResult(widget, query, widget.kind?.let { faces[it] }, onWidgetClick)
+                WidgetResult(widget, query, widget.kind?.let { faces[it] }, onWidgetClick, onHeartPulseClick)
             }
         }
         if (settings.isNotEmpty()) {
@@ -172,6 +173,7 @@ private fun WidgetResult(
     query: String,
     face: StatusFace?,
     onClick: (StatusWidgetKind) -> Unit,
+    onHeartPulseClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val kind = widget.kind
@@ -181,7 +183,7 @@ private fun WidgetResult(
         modifier
             .fillMaxWidth()
             .clip(MaterialTheme.shapes.extraLarge)
-            .then(if (kind != null) Modifier.clickable { onClick(kind) } else Modifier)
+            .clickable { if (kind != null) onClick(kind) else onHeartPulseClick() }
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             if (face != null) {
@@ -196,7 +198,7 @@ private fun WidgetResult(
                     stringResource(
                         R.string.search_result_subtitle,
                         stringResource(category.title),
-                        face?.value?.resolve(context) ?: stringResource(R.string.soon)
+                        face?.value?.resolve(context) ?: stringResource(R.string.heart_pulse_search)
                     ),
                     style = MaterialTheme.typography.bodySmall
                 )

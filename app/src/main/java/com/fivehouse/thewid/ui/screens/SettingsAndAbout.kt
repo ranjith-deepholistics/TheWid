@@ -60,13 +60,14 @@ private fun ThemeChoice.label(): Int = when (this) {
     ThemeChoice.Auto -> R.string.settings_theme_auto
 }
 
-/** Screen 9. Cards for permissions later phases add say so rather than offering a dead button. */
+/** Screen 9. */
 @Composable
 fun SettingsScreen(
     hero: StatusWidgetKind,
     theme: ThemeChoice,
     atmosphere: Atmosphere?,
     notificationsAllowed: Boolean,
+    overlayAllowed: Boolean,
     calendarOn: Boolean,
     backgroundAllowed: Boolean,
     version: String,
@@ -75,6 +76,7 @@ fun SettingsScreen(
     onThemeChange: (ThemeChoice) -> Unit,
     onAtmosphereChange: (Atmosphere?) -> Unit,
     onNotificationsClick: () -> Unit,
+    onOverlayClick: () -> Unit,
     onCalendarClick: () -> Unit,
     onBackgroundClick: () -> Unit,
     onHeroClick: () -> Unit,
@@ -109,9 +111,9 @@ fun SettingsScreen(
                 ShapeCatalog.Heart,
                 R.string.settings_overlay,
                 R.string.settings_overlay_body,
-                stringResource(R.string.soon),
-                false,
-                null,
+                stringResource(if (overlayAllowed) R.string.settings_on else R.string.settings_turn_on),
+                !overlayAllowed,
+                onOverlayClick,
                 Modifier.weight(1f)
             )
         }
@@ -359,6 +361,7 @@ private fun SettingsPreview() {
             ThemeChoice.Auto,
             Atmosphere.CoolMist,
             notificationsAllowed = false,
+            overlayAllowed = false,
             calendarOn = false,
             backgroundAllowed = false,
             version = "1.0",
@@ -367,6 +370,7 @@ private fun SettingsPreview() {
             onThemeChange = {},
             onAtmosphereChange = {},
             onNotificationsClick = {},
+            onOverlayClick = {},
             onCalendarClick = {},
             onBackgroundClick = {},
             onHeroClick = {},
@@ -385,6 +389,7 @@ private fun SettingsDarkPreview() {
             ThemeChoice.Dark,
             null,
             notificationsAllowed = true,
+            overlayAllowed = true,
             calendarOn = true,
             backgroundAllowed = true,
             version = "1.0",
@@ -393,6 +398,7 @@ private fun SettingsDarkPreview() {
             onThemeChange = {},
             onAtmosphereChange = {},
             onNotificationsClick = {},
+            onOverlayClick = {},
             onCalendarClick = {},
             onBackgroundClick = {},
             onHeroClick = {},

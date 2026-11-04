@@ -83,6 +83,25 @@
         <item quantity="other">%1$d new messages</item>
     </plurals>
     <string name="decide_roll_again">Roll again</string>
+    <string name="heart_pulse_body">A heart that beats around your camera when something happens.</string>
+    <string name="heart_pulse_notification">New notification</string>
+    <string name="heart_pulse_needs_notifications">Needs notification access. Switch on to allow.</string>
+    <string name="heart_pulse_charging">Charging</string>
+    <string name="heart_pulse_breathe">During Breathe</string>
+    <string name="heart_pulse_hour">Every hour</string>
+    <string name="heart_pulse_colour">Colour</string>
+    <string name="heart_pulse_needs_overlay">Needs \"Display over other apps\". It draws only around your camera, and taps pass straight through.</string>
+    <string name="heart_pulse_turn_on">Allow and turn on</string>
+    <string name="heart_pulse_turn_off">Turn off</string>
+    <string name="heart_pulse_test">Try a beat</string>
+    <string name="heart_pulse_on">ON</string>
+    <string name="heart_pulse_off">OFF</string>
+    <string name="heart_pulse_search">Beats around your camera</string>
+    <string name="breathe_heart_chip">Camera heart beats with your breath</string>
+    <string name="breathe_heart_done">Heart Pulse matched every breath.</string>
+    <string name="access_overlay_title">Let the heart\nbeat over your apps</string>
+    <string name="access_overlay_body">Android calls this Display over other apps. It only draws a small heart around your camera, and taps pass straight through.</string>
+    <string name="access_overlay_scope">Around the camera only</string>
     <string name="access_allow">Allow</string>
     <string name="access_denied_body">You can switch it on in settings. Everything else keeps working without it.</string>
     <string name="access_granted_title">%1$s is on</string>
@@ -125,7 +144,6 @@
     <string name="action_close">Close</string>
     <string name="action_next">Next</string>
     <string name="action_clear">Clear</string>
-    <string name="soon">Soon</string>
 
     <string name="widget_alerts">Alerts</string>
     <string name="widget_now_playing">Now playing</string>

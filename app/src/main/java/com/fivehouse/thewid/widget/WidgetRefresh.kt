@@ -15,6 +15,8 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import com.fivehouse.thewid.heartpulse.HeartPulse
+import com.fivehouse.thewid.heartpulse.PulseTrigger
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import java.util.concurrent.TimeUnit
@@ -91,5 +93,6 @@ object WidgetRefresh {
 class StatusChangeReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action in RefreshActions) WidgetRefresh.refreshNow(context)
+        if (intent.action == Intent.ACTION_POWER_CONNECTED) HeartPulse.trigger(context, PulseTrigger.Charging)
     }
 }

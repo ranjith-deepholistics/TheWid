@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.AlarmManager
 import android.content.Context
 import android.content.pm.PackageManager
+import android.provider.Settings
 import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -85,12 +86,28 @@ enum class AccessRequest(
         R.string.access_exact_title,
         R.string.access_exact_body,
         R.string.access_exact_scope
+    ),
+    Overlay(
+        null,
+        ShapeCatalog.Heart,
+        R.string.widget_heart_pulse,
+        R.string.access_overlay_title,
+        R.string.access_overlay_body,
+        R.string.access_overlay_scope
     );
 
-    fun isGranted(context: Context): Boolean = if (permission != null) {
-        context.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
-    } else {
-        context.getSystemService(AlarmManager::class.java).canScheduleExactAlarms()
+    /** The system page that grants this, for permissions with no runtime prompt. */
+    val settingsAction: String
+        get() = when (this) {
+            ExactAlarm -> Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM
+            Overlay -> Settings.ACTION_MANAGE_OVERLAY_PERMISSION
+            else -> Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+        }
+
+    fun isGranted(context: Context): Boolean = when {
+        permission != null -> context.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
+        this == Overlay -> Settings.canDrawOverlays(context)
+        else -> context.getSystemService(AlarmManager::class.java).canScheduleExactAlarms()
     }
 }
 

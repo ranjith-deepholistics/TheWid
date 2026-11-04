@@ -12,6 +12,7 @@ import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.fivehouse.thewid.data.personal.Decision
 import com.fivehouse.thewid.data.personal.FocusState
+import com.fivehouse.thewid.data.personal.HeartPulseSettings
 import com.fivehouse.thewid.data.personal.Person
 import com.fivehouse.thewid.data.status.AlertsStatus
 import com.fivehouse.thewid.ui.components.ScreenPreview
@@ -164,6 +165,18 @@ class ShellScreensTest {
         rule.onNodeWithText("25:00").assertIsDisplayed()
         rule.onNodeWithContentDescription("Play").performClick()
         assertTrue(toggled)
+    }
+
+    @Test
+    fun heartPulseAsksToTurnOnWhenOffAndOffersATestWhenOn() {
+        var turnedOn = false
+        rule.setContent {
+            ScreenPreview(Atmosphere.Night) {
+                HeartPulseScreen(HeartPulseSettings(), false, true, {}, {}, { turnedOn = true }, {}, {}, {})
+            }
+        }
+        rule.onNodeWithText("Allow and turn on").performClick()
+        assertTrue(turnedOn)
     }
 
     @Test

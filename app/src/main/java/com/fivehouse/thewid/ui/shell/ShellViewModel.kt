@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.fivehouse.thewid.data.personal.BreatheLog
 import com.fivehouse.thewid.data.personal.Decision
 import com.fivehouse.thewid.data.personal.FocusState
+import com.fivehouse.thewid.data.personal.HeartPulseSettings
 import com.fivehouse.thewid.data.personal.MochiSettings
 import com.fivehouse.thewid.data.personal.Person
 import com.fivehouse.thewid.data.personal.PersonalRepository
@@ -17,6 +18,7 @@ import com.fivehouse.thewid.data.settings.ThemeChoice
 import com.fivehouse.thewid.data.status.NowPlayingRepository
 import com.fivehouse.thewid.data.status.NowPlayingStatus
 import com.fivehouse.thewid.data.status.platform.MediaTransport
+import com.fivehouse.thewid.heartpulse.HeartPulse
 import com.fivehouse.thewid.ui.shapes.ShapeCatalog
 import com.fivehouse.thewid.ui.theme.Atmosphere
 import com.fivehouse.thewid.widget.ExactMinute
@@ -90,6 +92,16 @@ class ShellViewModel @Inject constructor(
     val focus = personal.focus.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), FocusState())
     val nowPlaying = nowPlayingRepository.status
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), NowPlayingStatus.Nothing)
+
+    val heartPulse = personal.heartPulse
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), HeartPulseSettings())
+
+    fun setHeartPulse(value: HeartPulseSettings) {
+        viewModelScope.launch {
+            personal.setHeartPulse(value)
+            HeartPulse.syncHourly(context, value)
+        }
+    }
 
     private val transport = MediaTransport(context)
 

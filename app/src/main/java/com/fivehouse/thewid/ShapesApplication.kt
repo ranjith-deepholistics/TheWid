@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import com.fivehouse.thewid.data.status.platform.NotificationAccess
+import com.fivehouse.thewid.heartpulse.HeartPulse
 import com.fivehouse.thewid.widget.ExactMinute
 import com.fivehouse.thewid.widget.WidgetPreviews
 import com.fivehouse.thewid.widget.WidgetRefresh
@@ -33,6 +34,7 @@ class ShapesApplication :
         WidgetRefresh.listenForChanges(this)
         CoroutineScope(SupervisorJob() + Dispatchers.Default).launch {
             if (personalRepository().timeSettings.first().exactMinute) ExactMinute.scheduleNext(this@ShapesApplication)
+            HeartPulse.syncHourly(this@ShapesApplication, personalRepository().heartPulse.first())
             WidgetPreviews.publish(this@ShapesApplication)
         }
     }
