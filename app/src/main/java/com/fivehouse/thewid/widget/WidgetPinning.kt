@@ -9,6 +9,7 @@ import android.content.Intent
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.state.updateAppWidgetState
 import com.fivehouse.thewid.ui.shapes.ShapeCatalog
+import com.fivehouse.thewid.ui.theme.Atmosphere
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,6 +20,7 @@ import kotlinx.coroutines.launch
 private const val EXTRA_KIND = "kind"
 private const val EXTRA_SHAPE = "shape"
 private const val EXTRA_GLOW = "glow"
+private const val EXTRA_ATMOSPHERE = "atmosphere"
 
 object WidgetPinning {
     private val lastPinned = MutableStateFlow<StatusWidgetKind?>(null)
@@ -38,11 +40,18 @@ object WidgetPinning {
     fun isSupported(context: Context): Boolean = AppWidgetManager.getInstance(context).isRequestPinAppWidgetSupported
 
     /** The launcher chooses the placed size. People resize from there. */
-    fun request(context: Context, kind: StatusWidgetKind, shape: ShapeCatalog?, glow: Boolean): Boolean {
+    fun request(
+        context: Context,
+        kind: StatusWidgetKind,
+        shape: ShapeCatalog?,
+        glow: Boolean,
+        atmosphere: Atmosphere = Atmosphere.CoolMist
+    ): Boolean {
         val callback = Intent(context, WidgetPinnedReceiver::class.java)
             .putExtra(EXTRA_KIND, kind.name)
             .putExtra(EXTRA_SHAPE, shape?.name)
             .putExtra(EXTRA_GLOW, glow)
+            .putExtra(EXTRA_ATMOSPHERE, atmosphere.name)
         // Mutable so the launcher can add the new widget's id. The explicit component keeps it private.
         val pending = PendingIntent.getBroadcast(
             context,
@@ -66,6 +75,7 @@ class WidgetPinnedReceiver : BroadcastReceiver() {
         if (id == AppWidgetManager.INVALID_APPWIDGET_ID || kind == null) return
         val shape = intent.getStringExtra(EXTRA_SHAPE)
         val glow = intent.getBooleanExtra(EXTRA_GLOW, true)
+        val atmosphere = intent.getStringExtra(EXTRA_ATMOSPHERE)
         val pending = goAsync()
         CoroutineScope(Dispatchers.Default).launch {
             try {
@@ -73,6 +83,7 @@ class WidgetPinnedReceiver : BroadcastReceiver() {
                 updateAppWidgetState(context, glanceId) { prefs ->
                     if (shape != null) prefs[WidgetShapeKey] = shape
                     prefs[WidgetGlowKey] = glow
+                    if (atmosphere != null) prefs[WidgetAtmosphereKey] = atmosphere
                 }
                 kind.newWidget().update(context, glanceId)
                 WidgetPinning.markPinned(kind)

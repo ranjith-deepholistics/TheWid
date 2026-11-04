@@ -129,7 +129,7 @@ class StatusFaceTest {
         assertEquals(WidgetLayout.ShapeOnly, widgetLayoutFor(DpSize(340.dp, 90.dp)))
         assertEquals(WidgetLayout.Square, widgetLayoutFor(DpSize(170.dp, 180.dp)))
         assertEquals(WidgetLayout.Wide, widgetLayoutFor(DpSize(340.dp, 180.dp)))
-        assertEquals(WidgetLayout.Wide, widgetLayoutFor(DpSize(340.dp, 370.dp)))
+        assertEquals(WidgetLayout.Large, widgetLayoutFor(DpSize(340.dp, 370.dp)))
     }
 
     @Test

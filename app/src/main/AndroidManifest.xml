@@ -4,6 +4,11 @@
 
     <!-- Wi-Fi status. Granted at install with no prompt. -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Each of these is asked for only after someone taps the feature that needs it. -->
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <uses-permission android:name="android.permission.READ_CALENDAR" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
 
     <application
         android:name=".ShapesApplication"
@@ -184,7 +189,24 @@
                 android:resource="@xml/widget_breathe" />
         </receiver>
 
-        <!-- Counts notifications and reads media sessions. Never opens a notification's content. -->
+        <receiver
+            android:name=".widget.FocusWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_focus">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_focus" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.MinuteTickReceiver"
+            android:exported="false" />
+
+        <!-- Counts notifications, matches message sender names in memory and reads media sessions.
+             Never reads a notification's text. -->
         <service
             android:name=".data.status.platform.ShapesNotificationListener"
             android:exported="true"

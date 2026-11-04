@@ -80,7 +80,13 @@ Designs are in `/design` (exported PNGs, numbered 1–26 plus the concept shots)
 | Breathe | in-app session | Circle ↔ Flower morph, SoftBurst on finish | none |
 | Heart Pulse | overlay around camera cutout (`DisplayCutout`) | Heart rings | Display over other apps |
 
+| Focus | built-in timer (mockup 28) | VerySunny while working, Circle on break | none |
+
 **Widget sizes:** 1×1 (shape only), 2×2, 4×2, 4×4 where it makes sense.
+
+**Optional permissions**, each asked for only after someone taps the feature: contacts (call and message in Inner Circle), coarse location (Time switching at sunset), calendar (Week), exact alarms (Time's exact minute marker). Message counts in Inner Circle match notification sender names in memory, using the same notification access as Alerts.
+
+**Future implementation (not in this version):** Steps, Water and Sleep widgets and the Today screen, from mockups 27, 29 and 30. Steps would use the step sensor with activity permission, Water would be tapped in by hand, and Sleep would be entered by hand.
 
 ---
 

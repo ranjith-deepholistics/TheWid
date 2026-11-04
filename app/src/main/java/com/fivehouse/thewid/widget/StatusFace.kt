@@ -4,7 +4,10 @@ import android.graphics.Bitmap
 import androidx.annotation.PluralsRes
 import androidx.annotation.StringRes
 import com.fivehouse.thewid.R
+import com.fivehouse.thewid.data.personal.MinuteMarker
 import com.fivehouse.thewid.data.personal.Person
+import com.fivehouse.thewid.data.personal.SunTimes
+import com.fivehouse.thewid.data.personal.TimeSettings
 import com.fivehouse.thewid.data.status.AlarmStatus
 import com.fivehouse.thewid.data.status.AlertsStatus
 import com.fivehouse.thewid.data.status.BatteryStatus
@@ -15,6 +18,7 @@ import com.fivehouse.thewid.data.status.NowPlayingStatus
 import com.fivehouse.thewid.data.status.SoundStatus
 import com.fivehouse.thewid.data.status.TimeStatus
 import com.fivehouse.thewid.data.status.WifiStatus
+import com.fivehouse.thewid.ui.shapes.ClockMarker
 import com.fivehouse.thewid.ui.shapes.ClockMarks
 import com.fivehouse.thewid.ui.shapes.FaceExpression
 import com.fivehouse.thewid.ui.shapes.ShapeCatalog
@@ -24,9 +28,12 @@ import com.fivehouse.thewid.ui.theme.GlossTint
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
 private const val NO_VALUE = "--"
-private val WidgetTint = Atmosphere.CoolMist.gloss
+
+/** Tint for faces with no colour of their own. A widget's chosen atmosphere replaces it when drawn. */
+val WidgetTint = Atmosphere.CoolMist.gloss
 
 sealed interface FaceValue {
     data class Literal(val text: String) : FaceValue
@@ -34,6 +41,13 @@ sealed interface FaceValue {
     data class Resource(@param:StringRes val id: Int) : FaceValue
 
     data class Plural(@param:PluralsRes val id: Int, val count: Int) : FaceValue
+
+    data class Format(@param:StringRes val id: Int, val args: List<Int>) : FaceValue
+
+    /** A timer the launcher keeps counting between widget updates. */
+    data class Countdown(val leftMs: Long, val isRunning: Boolean) : FaceValue
+
+    data object LiveClockSeconds : FaceValue
 
     /** A running clock that the launcher keeps current between widget updates. */
     data object LiveClock : FaceValue
@@ -55,7 +69,9 @@ data class StatusFace(
     val expression: FaceExpression? = null,
     val strip: List<ShapeCatalog>? = null,
     val people: List<Person>? = null,
-    val rollable: Boolean = false
+    val rollable: Boolean = false,
+    val footnote: FaceValue? = null,
+    val track: Float? = null
 )
 
 fun BatteryStatus.toFace(shape: ShapeCatalog = ShapeCatalog.SoftBurst, glow: Boolean = true): StatusFace {
@@ -113,17 +129,39 @@ fun AlarmStatus.toFace(zone: ZoneId, is24Hour: Boolean, shape: ShapeCatalog = Sh
 private fun Instant.format(zone: ZoneId, is24Hour: Boolean): String =
     DateTimeFormatter.ofPattern(if (is24Hour) "HH:mm" else "h:mm").withZone(zone).format(this)
 
-fun TimeStatus.toFace(): StatusFace {
+/** @param sun today's times, when "Switch at sunset" is on and a position is known. */
+fun TimeStatus.toFace(settings: TimeSettings = TimeSettings(), sun: SunTimes? = null): StatusFace {
     val minute = dateTime.minute
+    val dayNow = if (sun != null) !dateTime.isBefore(sun.sunrise) && dateTime.isBefore(sun.sunset) else isDay
     return StatusFace(
-        shape = if (isDay) ShapeCatalog.Sunny else ShapeCatalog.Cookie12Sided,
-        value = FaceValue.LiveClock,
-        tint = if (isDay) GlossTint.Sun else WidgetTint,
+        shape = if (dayNow) ShapeCatalog.Sunny else ShapeCatalog.Cookie12Sided,
+        value = if (settings.seconds) FaceValue.LiveClockSeconds else FaceValue.LiveClock,
+        tint = if (dayNow) GlossTint.Sun else WidgetTint,
         clock = ClockMarks(
             hourDegrees = (dateTime.hour % 12 + minute / 60f) * 30f,
-            minuteDegrees = minute * 6f
-        )
+            minuteDegrees = minute * 6f,
+            marker = when (settings.marker) {
+                MinuteMarker.Diamond -> ClockMarker.Diamond
+                MinuteMarker.Circle -> ClockMarker.Circle
+                MinuteMarker.None -> ClockMarker.None
+            }
+        ),
+        track = if (settings.showDayTrack) dayProgress(sun) else null,
+        footnote = sun?.takeIf { settings.showDayTrack && dayNow }?.let { sunsetFootnote(it) }
     )
+}
+
+/** How far through daylight it is, from 0 to 1. Without sun times, daylight is taken as 06:00 to 18:00. */
+private fun TimeStatus.dayProgress(sun: SunTimes?): Float {
+    val minutes = dateTime.hour * 60 + dateTime.minute
+    val start = sun?.sunrise?.let { it.hour * 60 + it.minute } ?: (6 * 60)
+    val end = sun?.sunset?.let { it.hour * 60 + it.minute } ?: (18 * 60)
+    return ((minutes - start).toFloat() / (end - start).coerceAtLeast(1)).coerceIn(0f, 1f)
+}
+
+private fun TimeStatus.sunsetFootnote(sun: SunTimes): FaceValue {
+    val left = ChronoUnit.MINUTES.between(dateTime, sun.sunset).toInt().coerceAtLeast(0)
+    return FaceValue.Format(R.string.time_sunset_in, listOf(left / 60, left % 60))
 }
 
 fun AlertsStatus.toFace(): StatusFace = when (this) {
@@ -153,7 +191,8 @@ fun NowPlayingStatus.toFace(): StatusFace = when (this) {
 
     is NowPlayingStatus.Track -> StatusFace(
         shape = if (isPlaying) ShapeCatalog.Cookie12Sided else ShapeCatalog.Square,
-        value = FaceValue.Resource(if (isPlaying) R.string.widget_value_playing else R.string.widget_value_paused),
+        value = leftMs?.let { FaceValue.Countdown(it, isPlaying) }
+            ?: FaceValue.Resource(if (isPlaying) R.string.widget_value_playing else R.string.widget_value_paused),
         isLive = isPlaying,
         caption = title,
         art = art

@@ -4,6 +4,8 @@ import com.fivehouse.thewid.R
 import com.fivehouse.thewid.data.personal.BreatheLog
 import com.fivehouse.thewid.data.personal.DayKind
 import com.fivehouse.thewid.data.personal.Decision
+import com.fivehouse.thewid.data.personal.FOCUS_SESSIONS
+import com.fivehouse.thewid.data.personal.FocusState
 import com.fivehouse.thewid.data.personal.MochiMood
 import com.fivehouse.thewid.data.personal.Person
 import com.fivehouse.thewid.data.personal.WeekEvent
@@ -132,4 +134,15 @@ fun BreatheLog.toFace(today: LocalDate): StatusFace = StatusFace(
     shape = ShapeCatalog.Flower,
     value = FaceValue.Plural(R.plurals.widget_value_sessions_today, sessionsOn(today)),
     tint = Atmosphere.Mint.gloss
+)
+
+fun FocusState.toFace(nowMs: Long): StatusFace = StatusFace(
+    shape = if (onBreak) ShapeCatalog.Circle else ShapeCatalog.VerySunny,
+    value = FaceValue.Countdown(remainingAt(nowMs), isRunning),
+    tint = Atmosphere.DuskBloom.gloss,
+    isLive = isRunning,
+    footnote = FaceValue.Format(
+        if (onBreak) R.string.focus_break_of else R.string.focus_session_of,
+        listOf(session, FOCUS_SESSIONS)
+    )
 )

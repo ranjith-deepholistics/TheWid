@@ -4,6 +4,7 @@ import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -66,6 +67,7 @@ fun SettingsScreen(
     theme: ThemeChoice,
     atmosphere: Atmosphere?,
     notificationsAllowed: Boolean,
+    calendarOn: Boolean,
     backgroundAllowed: Boolean,
     version: String,
     showFoundation: Boolean,
@@ -73,6 +75,7 @@ fun SettingsScreen(
     onThemeChange: (ThemeChoice) -> Unit,
     onAtmosphereChange: (Atmosphere?) -> Unit,
     onNotificationsClick: () -> Unit,
+    onCalendarClick: () -> Unit,
     onBackgroundClick: () -> Unit,
     onHeroClick: () -> Unit,
     onAboutClick: () -> Unit,
@@ -112,15 +115,26 @@ fun SettingsScreen(
                 Modifier.weight(1f)
             )
         }
-        AccessCard(
-            ShapeCatalog.Cookie12Sided,
-            R.string.settings_background,
-            R.string.settings_background_body,
-            stringResource(if (backgroundAllowed) R.string.settings_on else R.string.settings_turn_on),
-            !backgroundAllowed,
-            onBackgroundClick,
-            Modifier.fillMaxWidth()
-        )
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            AccessCard(
+                ShapeCatalog.Diamond,
+                R.string.settings_calendar,
+                R.string.settings_calendar_body,
+                stringResource(if (calendarOn) R.string.settings_on else R.string.settings_turn_on),
+                !calendarOn,
+                onCalendarClick,
+                Modifier.weight(1f)
+            )
+            AccessCard(
+                ShapeCatalog.Cookie12Sided,
+                R.string.settings_background,
+                R.string.settings_background_body,
+                stringResource(if (backgroundAllowed) R.string.settings_on else R.string.settings_turn_on),
+                !backgroundAllowed,
+                onBackgroundClick,
+                Modifier.weight(1f)
+            )
+        }
         Eyebrow(stringResource(R.string.settings_look))
         GlassTile(Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large) {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -136,7 +150,7 @@ fun SettingsScreen(
                 }
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(stringResource(R.string.settings_atmosphere), Modifier.weight(1f))
-                    AtmosphereSwatches(atmosphere, onAtmosphereChange)
+                    AtmosphereSwatches(AtmosphereChoices, atmosphere, onAtmosphereChange)
                 }
             }
         }
@@ -193,9 +207,19 @@ private fun AccessCard(
 }
 
 @Composable
-private fun AtmosphereSwatches(selected: Atmosphere?, onChange: (Atmosphere?) -> Unit, modifier: Modifier = Modifier) {
-    Row(modifier.selectableGroup(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-        AtmosphereChoices.forEach { choice ->
+internal fun AtmosphereSwatches(
+    choices: List<Atmosphere>,
+    selected: Atmosphere?,
+    onChange: (Atmosphere?) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier
+            .horizontalScroll(rememberScrollState())
+            .selectableGroup(),
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        choices.forEach { choice ->
             val isSelected = choice == selected
             // Tapping the chosen swatch clears it, returning every screen to its designed atmosphere.
             Box(
@@ -249,7 +273,8 @@ fun AboutScreen(
     onLicencesClick: () -> Unit,
     onLicencesDismiss: () -> Unit,
     onRateClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onFeedbackClick: (() -> Unit)? = null
 ) {
     Column(
         modifier
@@ -285,6 +310,7 @@ fun AboutScreen(
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 LinkRow(R.string.about_licences, onLicencesClick)
                 LinkRow(R.string.about_rate, onRateClick)
+                if (onFeedbackClick != null) LinkRow(R.string.about_feedback, onFeedbackClick)
             }
         }
         Spacer(Modifier.weight(1f))
@@ -333,6 +359,7 @@ private fun SettingsPreview() {
             ThemeChoice.Auto,
             Atmosphere.CoolMist,
             notificationsAllowed = false,
+            calendarOn = false,
             backgroundAllowed = false,
             version = "1.0",
             showFoundation = true,
@@ -340,6 +367,7 @@ private fun SettingsPreview() {
             onThemeChange = {},
             onAtmosphereChange = {},
             onNotificationsClick = {},
+            onCalendarClick = {},
             onBackgroundClick = {},
             onHeroClick = {},
             onAboutClick = {},
@@ -357,6 +385,7 @@ private fun SettingsDarkPreview() {
             ThemeChoice.Dark,
             null,
             notificationsAllowed = true,
+            calendarOn = true,
             backgroundAllowed = true,
             version = "1.0",
             showFoundation = false,
@@ -364,6 +393,7 @@ private fun SettingsDarkPreview() {
             onThemeChange = {},
             onAtmosphereChange = {},
             onNotificationsClick = {},
+            onCalendarClick = {},
             onBackgroundClick = {},
             onHeroClick = {},
             onAboutClick = {},

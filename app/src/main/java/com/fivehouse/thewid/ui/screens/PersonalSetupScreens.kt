@@ -106,7 +106,8 @@ fun WeekSetupScreen(
     onChange: (List<WeekEvent>) -> Unit,
     onBack: () -> Unit,
     onContinue: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    usingCalendar: Boolean = false
 ) {
     var adding by rememberSaveable { mutableStateOf(false) }
     Column(
@@ -119,7 +120,10 @@ fun WeekSetupScreen(
         Row(verticalAlignment = Alignment.CenterVertically) {
             BackButton(onBack)
             Spacer(Modifier.weight(1f))
-            Text(stringResource(R.string.week_no_calendar), style = MaterialTheme.typography.bodySmall)
+            Text(
+                stringResource(if (usingCalendar) R.string.week_using_calendar else R.string.week_no_calendar),
+                style = MaterialTheme.typography.bodySmall
+            )
         }
         Text(stringResource(R.string.week_title), style = MaterialTheme.typography.headlineLarge)
         Column(

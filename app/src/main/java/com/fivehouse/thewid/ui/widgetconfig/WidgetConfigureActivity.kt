@@ -59,6 +59,7 @@ import com.fivehouse.thewid.R
 import com.fivehouse.thewid.data.status.BatteryStatus
 import com.fivehouse.thewid.data.status.SoundStatus
 import com.fivehouse.thewid.ui.components.GlassTile
+import com.fivehouse.thewid.ui.screens.AtmosphereSwatches
 import com.fivehouse.thewid.ui.shapes.GlossyShape
 import com.fivehouse.thewid.ui.shapes.ShapeBitmapRenderer
 import com.fivehouse.thewid.ui.shapes.ShapeCatalog
@@ -68,7 +69,10 @@ import com.fivehouse.thewid.ui.theme.Numerals
 import com.fivehouse.thewid.ui.theme.ShapesTheme
 import com.fivehouse.thewid.widget.StatusFace
 import com.fivehouse.thewid.widget.StatusWidgetKind
+import com.fivehouse.thewid.widget.WidgetAtmosphereKey
 import com.fivehouse.thewid.widget.WidgetShapeKey
+import com.fivehouse.thewid.widget.WidgetTint
+import com.fivehouse.thewid.widget.atmosphere
 import com.fivehouse.thewid.widget.resolve
 import com.fivehouse.thewid.widget.statusFaces
 import com.fivehouse.thewid.widget.toFace
@@ -117,11 +121,13 @@ private fun WidgetConfigureRoute(kind: StatusWidgetKind, appWidgetId: Int, onDon
     val scope = rememberCoroutineScope()
     val glanceId = remember(appWidgetId) { GlanceAppWidgetManager(context).getGlanceIdBy(appWidgetId) }
     var chosen by rememberSaveable { mutableStateOf(kind.shapeOptions.firstOrNull()) }
+    var atmosphere by rememberSaveable { mutableStateOf(Atmosphere.CoolMist) }
 
     LaunchedEffect(glanceId) {
         val prefs = getAppWidgetState(context, PreferencesGlanceStateDefinition, glanceId)
         val saved = prefs[WidgetShapeKey]?.let { name -> ShapeCatalog.entries.firstOrNull { it.name == name } }
         if (saved != null && saved in kind.shapeOptions) chosen = saved
+        atmosphere = prefs.atmosphere()
     }
 
     val face by produceState<StatusFace?>(initialValue = null, chosen) {
@@ -134,10 +140,13 @@ private fun WidgetConfigureRoute(kind: StatusWidgetKind, appWidgetId: Int, onDon
         chosen = chosen,
         valueText = face?.value?.resolve(context).orEmpty(),
         onShapeChoose = { chosen = it },
+        atmosphere = atmosphere,
+        onAtmosphereChange = { atmosphere = it },
         onDone = {
             scope.launch {
                 updateAppWidgetState(context, glanceId) { prefs ->
                     chosen?.let { prefs[WidgetShapeKey] = it.name }
+                    prefs[WidgetAtmosphereKey] = atmosphere.name
                 }
                 kind.newWidget().update(context, glanceId)
                 onDone()
@@ -156,7 +165,9 @@ fun WidgetConfigureSheet(
     onShapeChoose: (ShapeCatalog) -> Unit,
     onDone: () -> Unit,
     onDismiss: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    atmosphere: Atmosphere = Atmosphere.CoolMist,
+    onAtmosphereChange: (Atmosphere) -> Unit = {}
 ) {
     val label = stringResource(kind.label)
     Box(
@@ -195,11 +206,16 @@ fun WidgetConfigureSheet(
             ) {
                 Text(stringResource(R.string.configure_eyebrow), style = MaterialTheme.typography.labelSmall)
                 Text(stringResource(R.string.configure_title, label), style = MaterialTheme.typography.headlineSmall)
-                PreviewPanel(label, face, valueText)
+                PreviewPanel(
+                    label,
+                    face?.let { if (it.tint == WidgetTint) it.copy(tint = atmosphere.gloss) else it },
+                    valueText
+                )
                 if (kind.shapeOptions.isNotEmpty()) {
                     Text(stringResource(R.string.configure_shape), style = MaterialTheme.typography.labelSmall)
                     ShapePicker(kind.shapeOptions, chosen, onShapeChoose)
                 }
+                AtmosphereSwatches(Atmosphere.entries, atmosphere, { if (it != null) onAtmosphereChange(it) })
                 Text(
                     stringResource(R.string.configure_hint),
                     style = MaterialTheme.typography.bodySmall,

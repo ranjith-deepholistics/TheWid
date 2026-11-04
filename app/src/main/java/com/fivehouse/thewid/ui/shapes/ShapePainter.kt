@@ -38,7 +38,9 @@ enum class FaceExpression { Happy, Excited, Sleepy, Dozing, Lonely, Busy }
 
 /** Positions for a clock's Arrow hand and Diamond minute dot, clockwise from 12. */
 @Immutable
-data class ClockMarks(val hourDegrees: Float, val minuteDegrees: Float)
+data class ClockMarks(val hourDegrees: Float, val minuteDegrees: Float, val marker: ClockMarker = ClockMarker.Diamond)
+
+enum class ClockMarker { Diamond, Circle, None }
 
 private const val CLOCK_HAND_SCALE = 0.3f
 private const val CLOCK_HAND_ORBIT = 0.12f
@@ -126,9 +128,14 @@ internal class ShapePainter(private val density: Float) {
             orbit = CLOCK_HAND_ORBIT,
             color = Ink.toArgb()
         )
+        val markerShape = when (clock.marker) {
+            ClockMarker.Diamond -> ShapeCatalog.Diamond
+            ClockMarker.Circle -> ShapeCatalog.Circle
+            ClockMarker.None -> return
+        }
         drawMark(
             canvas = canvas,
-            unitPath = ShapeCatalog.Diamond.polygon.toPath(Path()),
+            unitPath = markerShape.polygon.toPath(Path()),
             boxSize = boxSize,
             degrees = clock.minuteDegrees,
             markScale = CLOCK_DOT_SCALE,

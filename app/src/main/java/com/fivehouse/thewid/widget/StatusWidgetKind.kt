@@ -73,10 +73,18 @@ enum class StatusWidgetKind(
     InnerCircle(R.string.widget_inner_circle, InnerCircleWidgetReceiver::class, emptyList()),
     Decide(R.string.widget_decide, DecideWidgetReceiver::class, emptyList()),
     Mochi(R.string.widget_mochi, MochiWidgetReceiver::class, emptyList()),
-    Breathe(R.string.widget_breathe, BreatheWidgetReceiver::class, emptyList());
+    Breathe(R.string.widget_breathe, BreatheWidgetReceiver::class, emptyList()),
+    Focus(R.string.widget_focus, FocusWidgetReceiver::class, emptyList());
 
     /** These open a setup screen before Customize, because they show nothing until they're filled in. */
     val needsSetup: Boolean get() = this == Week || this == InnerCircle || this == Decide || this == Mochi
+
+    /** Tapping the widget opens this kind's own screen rather than the Library. */
+    val opensOwnScreen: Boolean
+        get() = when (this) {
+            Battery, Cellular, Wifi, Sound, Alarm, Alerts -> false
+            else -> true
+        }
 
     fun newWidget(): StatusWidget = when (this) {
         Battery -> BatteryWidget()
@@ -92,6 +100,7 @@ enum class StatusWidgetKind(
         Decide -> DecideWidget()
         Mochi -> MochiWidget()
         Breathe -> BreatheWidget()
+        Focus -> FocusWidget()
     }
 
     companion object {
@@ -150,4 +159,8 @@ class MochiWidgetReceiver : GlanceAppWidgetReceiver() {
 
 class BreatheWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget = StatusWidgetKind.Breathe.newWidget()
+}
+
+class FocusWidgetReceiver : GlanceAppWidgetReceiver() {
+    override val glanceAppWidget = StatusWidgetKind.Focus.newWidget()
 }

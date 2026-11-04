@@ -11,12 +11,26 @@ sealed interface NowPlayingStatus {
     /** Access is on but no app has a media session. */
     data object Nothing : NowPlayingStatus
 
-    data class Track(val title: String?, val artist: String?, val isPlaying: Boolean, val art: Bitmap?) :
-        NowPlayingStatus
+    /** @property leftMs time left in the track, or null when the app doesn't report it. */
+    data class Track(
+        val title: String?,
+        val artist: String?,
+        val isPlaying: Boolean,
+        val art: Bitmap?,
+        val leftMs: Long? = null,
+        val durationMs: Long? = null
+    ) : NowPlayingStatus
 }
 
 /** One app's media session. */
-data class MediaSnapshot(val title: String?, val artist: String?, val isPlaying: Boolean, val art: Bitmap?)
+data class MediaSnapshot(
+    val title: String?,
+    val artist: String?,
+    val isPlaying: Boolean,
+    val art: Bitmap?,
+    val leftMs: Long? = null,
+    val durationMs: Long? = null
+)
 
 interface NowPlayingSource {
     /** Every active media session, or null without notification access. */
@@ -34,7 +48,14 @@ class NowPlayingRepository(source: NowPlayingSource) {
                 else -> {
                     // The session list is ordered by priority, so without a playing one take the first.
                     val chosen = sessions.firstOrNull { it.isPlaying } ?: sessions.first()
-                    NowPlayingStatus.Track(chosen.title, chosen.artist, chosen.isPlaying, chosen.art)
+                    NowPlayingStatus.Track(
+                        chosen.title,
+                        chosen.artist,
+                        chosen.isPlaying,
+                        chosen.art,
+                        chosen.leftMs,
+                        chosen.durationMs
+                    )
                 }
             }
         }

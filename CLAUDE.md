@@ -34,8 +34,8 @@ Product spec, design tokens and build phases: @SHAPES_BUILD_SPEC.md
 - Glance can't set custom fonts or draw polygons: shapes and Doto values go through bitmaps, and the Time digits use a `TextClock` layout so they stay current between updates. Don't pass `SizeMode.Responsive`, which risks the roughly 1 MB limit on widget updates.
 - Each `StatusWidget` kind needs its own subclass: Glance finds instances by class, so a shared class makes `updateAll` redraw every widget as one kind.
 - Apps can't remove a launcher's widget or choose its placed size, so My widgets explains removal and Customize's size choice only previews.
-- The notification listener only counts. Never read a notification's title, text or extras: the permission screen and About promise this.
-- Only ask for notification access after someone taps a widget that needs it; `ShellApp` gates this in `toCustomize`.
-- Inner Circle uses the system contact picker and copies only the name, so it needs no contacts permission. Don't add features that read messages, numbers or calls without asking.
+- The notification listener counts, and reads only the title of message notifications to match Inner Circle names, in memory. Never read a notification's text or save sender names: the permission screen promises this.
+- Build everything the mockups show. A feature that needs a permission gets an `AccessRequest` ask flow, shown only after someone taps it. Adding a person needs no permission (the system contact picker); calling or messaging them asks for contacts.
+- Steps, Water, Sleep and the Today screen (mockups 27, 29, 30) are future work, listed in the spec. Don't build them yet.
 - Paint alpha multiplies a shader. Reset it before setting a shader on a reused `Paint`.
 - Dark atmospheres use a dimmer glass tile than the spec's values (8% fill, 20% border), following the Moss mockups. Light atmospheres use the spec's values.

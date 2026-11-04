@@ -5,15 +5,21 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.fivehouse.thewid.data.personal.BreatheLog
 import com.fivehouse.thewid.data.personal.Decision
+import com.fivehouse.thewid.data.personal.FocusState
 import com.fivehouse.thewid.data.personal.MochiSettings
 import com.fivehouse.thewid.data.personal.Person
 import com.fivehouse.thewid.data.personal.PersonalRepository
+import com.fivehouse.thewid.data.personal.TimeSettings
 import com.fivehouse.thewid.data.personal.WeekEvent
 import com.fivehouse.thewid.data.settings.AppPreferences
 import com.fivehouse.thewid.data.settings.AppPreferencesRepository
 import com.fivehouse.thewid.data.settings.ThemeChoice
+import com.fivehouse.thewid.data.status.NowPlayingRepository
+import com.fivehouse.thewid.data.status.NowPlayingStatus
+import com.fivehouse.thewid.data.status.platform.MediaTransport
 import com.fivehouse.thewid.ui.shapes.ShapeCatalog
 import com.fivehouse.thewid.ui.theme.Atmosphere
+import com.fivehouse.thewid.widget.ExactMinute
 import com.fivehouse.thewid.widget.PlacedWidget
 import com.fivehouse.thewid.widget.PlacedWidgets
 import com.fivehouse.thewid.widget.StatusFace
@@ -42,6 +48,7 @@ class ShellViewModel @Inject constructor(
     private val statusFaces: StatusFaces,
     private val placedWidgets: PlacedWidgets,
     private val personal: PersonalRepository,
+    private val nowPlayingRepository: NowPlayingRepository,
     @param:ApplicationContext private val context: Context
 ) : ViewModel() {
     /** Null until read from disk, so the splash knows when it can route. */
@@ -75,6 +82,33 @@ class ShellViewModel @Inject constructor(
         SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
         BreatheLog()
     )
+
+    val timeSettings = personal.timeSettings
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), TimeSettings())
+    val useCalendar = personal.useCalendar
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), false)
+    val focus = personal.focus.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), FocusState())
+    val nowPlaying = nowPlayingRepository.status
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), NowPlayingStatus.Nothing)
+
+    private val transport = MediaTransport(context)
+
+    fun playPause() = transport.playPause()
+
+    fun nextTrack() = transport.next()
+
+    fun previousTrack() = transport.previous()
+
+    fun rollDecision() = updatePersonal { rollDecision() }
+
+    fun setTimeSettings(value: TimeSettings) = updatePersonal {
+        setTimeSettings(value)
+        if (value.exactMinute) ExactMinute.scheduleNext(context) else ExactMinute.cancel(context)
+    }
+
+    fun setUseCalendar(value: Boolean) = updatePersonal { setUseCalendar(value) }
+
+    fun updateFocus(change: (FocusState) -> FocusState) = updatePersonal { updateFocus(change) }
 
     fun setEvents(value: List<WeekEvent>) = updatePersonal { setEvents(value) }
 

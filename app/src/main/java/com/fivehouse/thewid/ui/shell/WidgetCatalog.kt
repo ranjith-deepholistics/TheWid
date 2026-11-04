@@ -35,7 +35,8 @@ enum class CatalogWidget(
     Breathe(R.string.widget_breathe, ShapeCatalog.Flower, StatusWidgetKind.Breathe),
     HeartPulse(R.string.widget_heart_pulse, ShapeCatalog.Heart, needsPermission = true),
     InnerCircle(R.string.widget_inner_circle, ShapeCatalog.Heart, StatusWidgetKind.InnerCircle),
-    Decide(R.string.widget_decide, ShapeCatalog.Cookie9Sided, StatusWidgetKind.Decide)
+    Decide(R.string.widget_decide, ShapeCatalog.Cookie9Sided, StatusWidgetKind.Decide),
+    Focus(R.string.widget_focus, ShapeCatalog.VerySunny, StatusWidgetKind.Focus)
 }
 
 enum class WidgetCategory(
@@ -60,7 +61,7 @@ enum class WidgetCategory(
     Time(
         R.string.category_time,
         R.string.category_time_subtitle,
-        listOf(CatalogWidget.Time, CatalogWidget.Alarm, CatalogWidget.Week)
+        listOf(CatalogWidget.Time, CatalogWidget.Alarm, CatalogWidget.Week, CatalogWidget.Focus)
     ),
     Companion(
         R.string.category_companion,

@@ -36,6 +36,72 @@
     <string name="mochi_value_dozing">DOZING</string>
     <string name="mochi_value_lonely">LONELY</string>
     <string name="mochi_value_busy">BUSY</string>
+    <string name="widget_focus">Focus</string>
+    <string name="widget_focus_description">A focus timer that keeps counting on your home screen</string>
+    <string name="widget_value_playing_label">Playing</string>
+    <string name="widget_value_paused_label">Paused</string>
+    <string name="focus_title">Deep work</string>
+    <string name="focus_session_of">Session %1$d of %2$d</string>
+    <string name="focus_break_of">Break after session %1$d of %2$d</string>
+    <string name="focus_reset">Restart</string>
+    <string name="focus_skip">Skip</string>
+    <string name="time_sunset_in">Sunset in %1$d h %2$d m</string>
+    <string name="time_day">Day</string>
+    <string name="time_night">Night</string>
+    <string name="time_marker">MINUTE MARKER</string>
+    <string name="time_marker_diamond">Diamond</string>
+    <string name="time_marker_circle">Circle</string>
+    <string name="time_marker_none">None</string>
+    <string name="time_sunset">Switch at sunset</string>
+    <string name="time_location_missing">Couldn\'t get your location yet, so it\'s using 06:00 to 18:00.</string>
+    <string name="time_day_track">Show day track</string>
+    <string name="time_seconds">Seconds</string>
+    <string name="time_exact">Exact minute marker</string>
+    <string name="now_playing_nothing">Nothing playing</string>
+    <string name="now_playing_left">%1$s left</string>
+    <string name="now_playing_previous">Previous track</string>
+    <string name="now_playing_next">Next track</string>
+    <string name="now_playing_play">Play</string>
+    <string name="now_playing_pause">Pause</string>
+    <string name="now_playing_same_access">Uses the same access as Alerts. Nothing extra to allow.</string>
+    <string name="action_edit">Edit</string>
+    <string name="mochi_companion">Your companion</string>
+    <string name="mochi_moods_title">Moods</string>
+    <string name="mochi_line_happy">All good here.</string>
+    <string name="mochi_line_excited">Ooh, snacks! Charging up.</string>
+    <string name="mochi_line_sleepy">So sleepy. Battery\'s low.</string>
+    <string name="mochi_line_dozing">Shh. Dozing while it\'s quiet.</string>
+    <string name="mochi_line_lonely">Feeling lonely without Wi-Fi.</string>
+    <string name="mochi_line_busy">So many alerts!</string>
+    <string name="circle_page_title">Your people</string>
+    <string name="circle_message">Message</string>
+    <string name="circle_call">Call</string>
+    <string name="circle_video">Video call</string>
+    <string name="circle_see_messages">See new messages here</string>
+    <plurals name="circle_new_messages">
+        <item quantity="one">%1$d new message</item>
+        <item quantity="other">%1$d new messages</item>
+    </plurals>
+    <string name="decide_roll_again">Roll again</string>
+    <string name="access_allow">Allow</string>
+    <string name="access_denied_body">You can switch it on in settings. Everything else keeps working without it.</string>
+    <string name="access_granted_title">%1$s is on</string>
+    <string name="access_contacts_feature">Call and message</string>
+    <string name="access_contacts_title">Let Shapes find\ntheir number</string>
+    <string name="access_contacts_body">It only looks up the number of the person you tap, to call or message them.</string>
+    <string name="access_contacts_scope">Only who you tap</string>
+    <string name="access_location_feature">Switch at sunset</string>
+    <string name="access_location_title">Let Shapes know\nyour sunset</string>
+    <string name="access_location_body">It uses your rough location to work out sunset on this phone. Nothing is sent anywhere.</string>
+    <string name="access_location_scope">Rough location only</string>
+    <string name="access_calendar_feature">Calendar dates</string>
+    <string name="access_calendar_title">Let Week show\nyour calendar</string>
+    <string name="access_calendar_body">Your events appear as busy days alongside the dates you add. It can\'t change your calendar.</string>
+    <string name="access_calendar_scope">Read only</string>
+    <string name="access_exact_feature">Exact minute marker</string>
+    <string name="access_exact_title">Keep the minute\nmarker exact</string>
+    <string name="access_exact_body">Android asks you to allow exact alarms for this. It only updates while your phone is awake.</string>
+    <string name="access_exact_scope">Awake time only</string>
     <string name="widget_live">Live</string>
     <string name="widget_needs_access">Needs notification access</string>
     <string name="widget_value_playing">PLAY</string>
@@ -116,6 +182,9 @@
     <string name="nav_settings">Settings</string>
 
     <string name="customize_shape_named">SHAPE · %1$s</string>
+    <string name="customize_atmosphere_named">ATMOSPHERE · %1$s</string>
+    <string name="customize_open">Open %1$s</string>
+    <string name="customize_open_settings">Time settings</string>
     <string name="customize_glow">Glow while charging</string>
     <string name="customize_no_permission">No permission needed</string>
     <string name="customize_uses_notification_access">Uses notification access</string>
@@ -124,6 +193,7 @@
     <string name="size_1x1">1×1</string>
     <string name="size_2x2">2×2</string>
     <string name="size_4x2">4×2</string>
+    <string name="size_4x4">4×4</string>
 
     <string name="added_title">All good.</string>
     <string name="added_new">NEW</string>
@@ -169,8 +239,8 @@
     <string name="search_result_subtitle">%1$s · %2$s</string>
 
     <string name="permission_alerts_title">Let %1$s count\nyour alerts</string>
-    <string name="permission_alerts_body">It only counts them. It never reads, saves or sends what they say.</string>
-    <string name="permission_alerts_chip_scope">Counts only</string>
+    <string name="permission_alerts_body">It counts them and matches sender names to your Inner Circle, in memory only. It never reads, saves or sends what they say.</string>
+    <string name="permission_alerts_chip_scope">Counts and matches names</string>
     <string name="permission_alerts_chip_also">Also unlocks Now playing</string>
     <string name="permission_now_playing_title">Let %1$s see\nwhat\'s playing</string>
     <string name="permission_now_playing_body">It only shows the track and its art on your widget. Nothing is saved or sent.</string>
@@ -200,6 +270,7 @@
 
     <string name="week_title">Your key dates</string>
     <string name="week_no_calendar">No calendar access needed</string>
+    <string name="week_using_calendar">Showing your calendar too</string>
     <string name="week_empty">Add a date and its shape appears here.</string>
     <string name="week_add">Add a date</string>
     <string name="week_add_title">New date</string>
@@ -264,6 +335,8 @@
     <string name="settings_notifications_body">Alerts, Now playing</string>
     <string name="settings_overlay">Over other apps</string>
     <string name="settings_overlay_body">Heart Pulse</string>
+    <string name="settings_calendar">Calendar</string>
+    <string name="settings_calendar_body">Week · optional</string>
     <string name="settings_background">Background</string>
     <string name="settings_background_body">Keeps widgets fresh</string>
     <string name="settings_on">On</string>
@@ -289,6 +362,7 @@
     <string name="about_no_ads">No ads, no tracking</string>
     <string name="about_licences">Open-source licences</string>
     <string name="about_rate">Rate on Google Play</string>
+    <string name="about_feedback">Send feedback</string>
     <string name="about_licences_ok">Close</string>
     <string name="about_licences_libraries">AndroidX, Jetpack Compose, Glance, Hilt, Kotlin and Haze are used under the Apache License 2.0.</string>
 

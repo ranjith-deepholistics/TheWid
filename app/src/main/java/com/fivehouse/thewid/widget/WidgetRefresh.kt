@@ -18,9 +18,11 @@ import androidx.work.WorkerParameters
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.flow.first
 
 private const val PERIODIC_WORK = "widget_refresh_periodic"
 private const val IMMEDIATE_WORK = "widget_refresh_now"
+private const val DELAYED_WORK = "widget_refresh_later"
 private const val REFRESH_INTERVAL_MINUTES = 15L
 
 private val RuntimeOnlyActions = listOf(
@@ -39,6 +41,11 @@ class WidgetRefreshWorker @AssistedInject constructor(@Assisted context: Context
     CoroutineWorker(context, params) {
     override suspend fun doWork(): Result {
         StatusWidgetKind.entries.forEach { kind -> kind.newWidget().updateAll(applicationContext) }
+        // Countdowns run in the launcher, so redraw when a focus phase ends.
+        val nowMs = System.currentTimeMillis()
+        applicationContext.personalRepository().focus.first().settledAt(nowMs).endsAtEpochMs?.let { end ->
+            WidgetRefresh.refreshAfter(applicationContext, end - nowMs)
+        }
         return Result.success()
     }
 }
@@ -57,6 +64,16 @@ object WidgetRefresh {
             IMMEDIATE_WORK,
             ExistingWorkPolicy.REPLACE,
             OneTimeWorkRequestBuilder<WidgetRefreshWorker>().build()
+        )
+    }
+
+    fun refreshAfter(context: Context, delayMs: Long) {
+        WorkManager.getInstance(context).enqueueUniqueWork(
+            DELAYED_WORK,
+            ExistingWorkPolicy.REPLACE,
+            OneTimeWorkRequestBuilder<WidgetRefreshWorker>()
+                .setInitialDelay(delayMs.coerceAtLeast(0), TimeUnit.MILLISECONDS)
+                .build()
         )
     }
 

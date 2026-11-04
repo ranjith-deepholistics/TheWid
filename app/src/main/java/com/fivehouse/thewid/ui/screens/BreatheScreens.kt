@@ -156,7 +156,7 @@ private fun BreathDial(state: BreathState, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun ProgressTicks(progress: Float, modifier: Modifier = Modifier) {
+internal fun ProgressTicks(progress: Float, modifier: Modifier = Modifier) {
     val ink = LocalContentColor.current
     Canvas(modifier) {
         val outer = size.minDimension / 2

@@ -39,17 +39,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.fivehouse.thewid.R
-import com.fivehouse.thewid.data.personal.BreatheLog
-import com.fivehouse.thewid.data.personal.MochiMood
-import com.fivehouse.thewid.data.status.AlarmStatus
-import com.fivehouse.thewid.data.status.AlertsStatus
-import com.fivehouse.thewid.data.status.BatteryStatus
-import com.fivehouse.thewid.data.status.CellularNetwork
-import com.fivehouse.thewid.data.status.CellularStatus
-import com.fivehouse.thewid.data.status.NowPlayingStatus
-import com.fivehouse.thewid.data.status.SoundStatus
-import com.fivehouse.thewid.data.status.TimeStatus
-import com.fivehouse.thewid.data.status.WifiStatus
 import com.fivehouse.thewid.ui.components.BackButton
 import com.fivehouse.thewid.ui.components.FaceShape
 import com.fivehouse.thewid.ui.components.FaceValueText
@@ -68,10 +57,8 @@ import com.fivehouse.thewid.ui.theme.Ink
 import com.fivehouse.thewid.ui.theme.Numerals
 import com.fivehouse.thewid.widget.StatusFace
 import com.fivehouse.thewid.widget.StatusWidgetKind
-import com.fivehouse.thewid.widget.toFace
+import com.fivehouse.thewid.widget.sampleFace
 import java.time.LocalDate
-import java.time.ZoneOffset
-import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
@@ -382,21 +369,7 @@ private fun CatalogTile(
     }
 }
 
-internal val PreviewFacesMap: Map<StatusWidgetKind, StatusFace> = mapOf(
-    StatusWidgetKind.Battery to BatteryStatus(68, isCharging = true).toFace(),
-    StatusWidgetKind.Cellular to CellularStatus.Signal(
-        3,
-        CellularNetwork.FiveG
-    ).toFace(),
-    StatusWidgetKind.Wifi to WifiStatus.Off.toFace(),
-    StatusWidgetKind.Sound to SoundStatus.Silent.toFace(),
-    StatusWidgetKind.Time to TimeStatus(ZonedDateTime.parse("2026-11-02T09:42:00+05:30"), isDay = true).toFace(),
-    StatusWidgetKind.Alarm to AlarmStatus.None.toFace(ZoneOffset.UTC, true),
-    StatusWidgetKind.Alerts to AlertsStatus.Count(2).toFace(),
-    StatusWidgetKind.NowPlaying to NowPlayingStatus.NoAccess.toFace(),
-    StatusWidgetKind.Mochi to MochiMood.Excited.toFace("Mochi"),
-    StatusWidgetKind.Breathe to BreatheLog(0, 0).toFace(LocalDate.ofEpochDay(0))
-)
+internal val PreviewFacesMap: Map<StatusWidgetKind, StatusFace> = StatusWidgetKind.entries.associateWith(::sampleFace)
 
 @Preview(widthDp = 390, heightDp = 844)
 @Composable

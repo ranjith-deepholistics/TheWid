@@ -3,7 +3,13 @@ package com.fivehouse.thewid.widget
 import android.content.Context
 import android.text.format.DateFormat
 import com.fivehouse.thewid.data.personal.PersonalRepository
+import com.fivehouse.thewid.data.personal.SunTimes
+import com.fivehouse.thewid.data.personal.TimeSettings
+import com.fivehouse.thewid.data.personal.WeekEvent
+import com.fivehouse.thewid.data.personal.calendarEvents
 import com.fivehouse.thewid.data.personal.moodFor
+import com.fivehouse.thewid.data.personal.sunTimes
+import com.fivehouse.thewid.data.personal.withCalendar
 import com.fivehouse.thewid.data.status.AlarmRepository
 import com.fivehouse.thewid.data.status.AlertsRepository
 import com.fivehouse.thewid.data.status.AlertsStatus
@@ -14,6 +20,7 @@ import com.fivehouse.thewid.data.status.NowPlayingRepository
 import com.fivehouse.thewid.data.status.SoundRepository
 import com.fivehouse.thewid.data.status.SoundStatus
 import com.fivehouse.thewid.data.status.TimeRepository
+import com.fivehouse.thewid.data.status.TimeStatus
 import com.fivehouse.thewid.data.status.WifiRepository
 import com.fivehouse.thewid.data.status.WifiStatus
 import com.fivehouse.thewid.data.status.platform.AndroidAlarmSource
@@ -35,9 +42,12 @@ import dagger.hilt.components.SingletonComponent
 import java.time.ZoneId
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 
 /** Turns live status into what a widget of each kind draws. */
@@ -73,14 +83,21 @@ class StatusFaces @Inject constructor(
                 it.toFace(ZoneId.systemDefault(), DateFormat.is24HourFormat(context), checkNotNull(chosen))
             }
 
-            StatusWidgetKind.Time -> time.status.map { it.toFace() }
+            StatusWidgetKind.Time -> combine(time.status, personal.timeSettings) { now, settings ->
+                now.toFace(settings, settings.sunFor(now))
+            }.distinctUntilChanged()
+
+            StatusWidgetKind.Focus -> combine(personal.focus, time.status) { focus, _ ->
+                val nowMs = System.currentTimeMillis()
+                focus.settledAt(nowMs).toFace(nowMs)
+            }
 
             StatusWidgetKind.Alerts -> alerts.status.map { it.toFace() }
 
             StatusWidgetKind.NowPlaying -> nowPlaying.status.map { it.toFace() }
 
-            StatusWidgetKind.Week -> combine(personal.events, time.status) { events, now ->
-                weekFace(events, now.dateTime.toLocalDate())
+            StatusWidgetKind.Week -> combine(personal.events, calendarDates(), time.status) { events, dates, now ->
+                weekFace(withCalendar(events, dates), now.dateTime.toLocalDate())
             }.distinctUntilChanged()
 
             StatusWidgetKind.InnerCircle -> personal.people.map(::peopleFace)
@@ -93,6 +110,18 @@ class StatusFaces @Inject constructor(
 
             StatusWidgetKind.Mochi -> mochiFaces()
         }
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private fun calendarDates(): Flow<List<WeekEvent>> = personal.useCalendar.flatMapLatest { use ->
+        if (use) context.calendarEvents() else flowOf(emptyList())
+    }
+
+    private fun TimeSettings.sunFor(now: TimeStatus): SunTimes? {
+        val lat = latitude
+        val lon = longitude
+        if (!switchAtSunset || lat == null || lon == null) return null
+        return sunTimes(now.dateTime.toLocalDate(), lat, lon, now.dateTime.zone)
     }
 
     private fun mochiFaces(): Flow<StatusFace> {

@@ -19,6 +19,7 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 
 const val MAX_PEOPLE = 4
@@ -117,6 +118,31 @@ data class BreatheLog(val epochDay: Long = 0, val sessionsToday: Int = 0) {
     fun afterSession(today: LocalDate): BreatheLog = BreatheLog(today.toEpochDay(), sessionsOn(today) + 1)
 }
 
+enum class MinuteMarker { Diamond, Circle, None }
+
+/**
+ * @property latitude rounded and kept on this phone, for working out sunset. Never sent anywhere.
+ * @property exactMinute keeps the minute marker exact, using the exact alarm permission.
+ */
+@Serializable
+data class TimeSettings(
+    val marker: MinuteMarker = MinuteMarker.Diamond,
+    val switchAtSunset: Boolean = false,
+    val showDayTrack: Boolean = true,
+    val seconds: Boolean = false,
+    val exactMinute: Boolean = false,
+    val latitude: Double? = null,
+    val longitude: Double? = null
+)
+
+/** How many messages are waiting from each person, by matching notification sender names. */
+fun messagesPerPerson(people: List<Person>, senders: List<String>): Map<Person, Int> = people.associateWith { person ->
+    senders.count { it.trim().equals(person.name.trim(), ignoreCase = true) }
+}
+
+/** Calendar dates only show as Busy, since a calendar doesn't say what kind of day an event is. */
+fun withCalendar(events: List<WeekEvent>, calendar: List<WeekEvent>): List<WeekEvent> = events + calendar
+
 private val Context.personalStore: DataStore<Preferences> by preferencesDataStore("personal")
 
 @Singleton
@@ -128,6 +154,9 @@ class PersonalRepository @Inject constructor(@param:ApplicationContext private v
     val decision: Flow<Decision> = read(DecisionKey, Decision.serializer(), Decision())
     val mochi: Flow<MochiSettings> = read(MochiKey, MochiSettings.serializer(), MochiSettings())
     val breathe: Flow<BreatheLog> = read(BreatheKey, BreatheLog.serializer(), BreatheLog())
+    val timeSettings: Flow<TimeSettings> = read(TimeKey, TimeSettings.serializer(), TimeSettings())
+    val useCalendar: Flow<Boolean> = read(CalendarKey, Boolean.serializer(), false)
+    val focus: Flow<FocusState> = read(FocusKey, FocusState.serializer(), FocusState())
 
     suspend fun setEvents(value: List<WeekEvent>) = write(EventsKey, ListSerializer(WeekEvent.serializer()), value)
 
@@ -136,6 +165,13 @@ class PersonalRepository @Inject constructor(@param:ApplicationContext private v
     suspend fun setDecision(value: Decision) = write(DecisionKey, Decision.serializer(), value)
 
     suspend fun setMochi(value: MochiSettings) = write(MochiKey, MochiSettings.serializer(), value)
+
+    suspend fun setTimeSettings(value: TimeSettings) = write(TimeKey, TimeSettings.serializer(), value)
+
+    suspend fun setUseCalendar(value: Boolean) = write(CalendarKey, Boolean.serializer(), value)
+
+    suspend fun updateFocus(change: (FocusState) -> FocusState) =
+        update(FocusKey, FocusState.serializer(), FocusState(), change)
 
     suspend fun rollDecision() = update(DecisionKey, Decision.serializer(), Decision()) { it.rolled() }
 
@@ -172,5 +208,8 @@ class PersonalRepository @Inject constructor(@param:ApplicationContext private v
         val DecisionKey = stringPreferencesKey("decision")
         val MochiKey = stringPreferencesKey("mochi")
         val BreatheKey = stringPreferencesKey("breathe")
+        val TimeKey = stringPreferencesKey("time_settings")
+        val CalendarKey = stringPreferencesKey("use_calendar")
+        val FocusKey = stringPreferencesKey("focus")
     }
 }

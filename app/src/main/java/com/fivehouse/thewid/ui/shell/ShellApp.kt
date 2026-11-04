@@ -20,8 +20,10 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -44,23 +46,33 @@ import com.fivehouse.thewid.R
 import com.fivehouse.thewid.data.personal.MAX_PEOPLE
 import com.fivehouse.thewid.data.personal.Person
 import com.fivehouse.thewid.data.personal.PersonShapes
+import com.fivehouse.thewid.data.personal.coarsePosition
+import com.fivehouse.thewid.data.personal.messagesPerPerson
 import com.fivehouse.thewid.data.settings.AppPreferences
 import com.fivehouse.thewid.data.status.platform.NotificationAccess
+import com.fivehouse.thewid.data.status.platform.ShapesNotificationListener
 import com.fivehouse.thewid.ui.catalog.FoundationCatalogRoute
 import com.fivehouse.thewid.ui.components.AtmosphereBackground
 import com.fivehouse.thewid.ui.screens.AboutScreen
+import com.fivehouse.thewid.ui.screens.AccessRequest
+import com.fivehouse.thewid.ui.screens.AccessScreen
 import com.fivehouse.thewid.ui.screens.AddByHandScreen
 import com.fivehouse.thewid.ui.screens.AddedScreen
 import com.fivehouse.thewid.ui.screens.BreatheCompleteScreen
 import com.fivehouse.thewid.ui.screens.BreatheSessionScreen
 import com.fivehouse.thewid.ui.screens.CategoryScreen
 import com.fivehouse.thewid.ui.screens.CustomizeScreen
+import com.fivehouse.thewid.ui.screens.DecidePage
 import com.fivehouse.thewid.ui.screens.DecideSetupScreen
+import com.fivehouse.thewid.ui.screens.FocusPage
 import com.fivehouse.thewid.ui.screens.HeroPickerScreen
+import com.fivehouse.thewid.ui.screens.InnerCirclePage
 import com.fivehouse.thewid.ui.screens.InnerCircleSetupScreen
 import com.fivehouse.thewid.ui.screens.LibraryScreen
+import com.fivehouse.thewid.ui.screens.MochiPage
 import com.fivehouse.thewid.ui.screens.MochiSetupScreen
 import com.fivehouse.thewid.ui.screens.MyWidgetsScreen
+import com.fivehouse.thewid.ui.screens.NowPlayingPage
 import com.fivehouse.thewid.ui.screens.OnboardingScreen
 import com.fivehouse.thewid.ui.screens.PermissionScreen
 import com.fivehouse.thewid.ui.screens.PermissionStage
@@ -68,6 +80,7 @@ import com.fivehouse.thewid.ui.screens.PreviewSize
 import com.fivehouse.thewid.ui.screens.SearchScreen
 import com.fivehouse.thewid.ui.screens.SettingsScreen
 import com.fivehouse.thewid.ui.screens.SplashScreen
+import com.fivehouse.thewid.ui.screens.TimeSetupScreen
 import com.fivehouse.thewid.ui.screens.WeekSetupScreen
 import com.fivehouse.thewid.ui.shapes.ShapeCatalog
 import com.fivehouse.thewid.ui.theme.Atmosphere
@@ -77,6 +90,7 @@ import com.fivehouse.thewid.widget.StatusFace
 import com.fivehouse.thewid.widget.StatusWidgetKind
 import com.fivehouse.thewid.widget.WidgetPinning
 import java.time.LocalDate
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.serialization.Serializable
 
@@ -96,6 +110,18 @@ import kotlinx.serialization.Serializable
 
 @Serializable private data object BreatheRoute
 
+@Serializable private data object NowPlayingRoute
+
+@Serializable private data object MochiRoute
+
+@Serializable private data object InnerCircleRoute
+
+@Serializable private data object DecideRoute
+
+@Serializable private data object FocusRoute
+
+@Serializable private data class AccessRoute(val request: String)
+
 @Serializable private data class AddedRoute(val kind: String)
 
 @Serializable private data class AddByHandRoute(val kind: String)
@@ -112,7 +138,20 @@ import kotlinx.serialization.Serializable
 
 @Serializable private data object FoundationRoute
 
+private const val FEEDBACK_ADDRESS = ""
+
 private fun kindNamed(name: String) = StatusWidgetKind.valueOf(name)
+
+/** A kind's own screen, or null where its setup screen is the one to open. */
+private fun pageFor(kind: StatusWidgetKind, viewModel: ShellViewModel): Any? = when (kind) {
+    StatusWidgetKind.Breathe -> BreatheRoute
+    StatusWidgetKind.NowPlaying -> NowPlayingRoute
+    StatusWidgetKind.Mochi -> MochiRoute
+    StatusWidgetKind.Focus -> FocusRoute
+    StatusWidgetKind.InnerCircle -> InnerCircleRoute.takeIf { viewModel.people.value.isNotEmpty() }
+    StatusWidgetKind.Decide -> DecideRoute.takeIf { viewModel.decision.value.canRoll }
+    else -> null
+}
 
 @Composable
 fun ShellApp(openRequest: MutableStateFlow<StatusWidgetKind?>, viewModel: ShellViewModel = hiltViewModel()) {
@@ -150,7 +189,7 @@ fun ShellApp(openRequest: MutableStateFlow<StatusWidgetKind?>, viewModel: ShellV
         val kind = request
         if (kind != null && pastSplash) {
             openRequest.value = null
-            if (kind == StatusWidgetKind.Breathe) nav.navigate(BreatheRoute) else nav.navigate(SetupRoute(kind.name))
+            nav.navigate(pageFor(kind, viewModel) ?: SetupRoute(kind.name))
         }
     }
 
@@ -199,6 +238,55 @@ fun ShellApp(openRequest: MutableStateFlow<StatusWidgetKind?>, viewModel: ShellV
             val kind = kindNamed(entry.toRoute<CustomizeRoute>().kind)
             Hosted(Atmosphere.Moss, prefs) { CustomizeDestination(kind, viewModel, nav) }
         }
+        composable<NowPlayingRoute> {
+            val track by viewModel.nowPlaying.collectAsStateWithLifecycle()
+            Hosted(Atmosphere.Moss, prefs) {
+                NowPlayingPage(
+                    track = track,
+                    extraFaces = listOfNotNull(
+                        faces[StatusWidgetKind.Battery]?.let { R.string.widget_battery to it },
+                        faces[StatusWidgetKind.Alerts]?.let { R.string.widget_alerts to it }
+                    ),
+                    onBack = nav::goBack,
+                    onPlayPause = viewModel::playPause,
+                    onNext = viewModel::nextTrack,
+                    onPrevious = viewModel::previousTrack
+                )
+            }
+        }
+        composable<MochiRoute> {
+            val mochi by viewModel.mochi.collectAsStateWithLifecycle()
+            Hosted(Atmosphere.Moss, prefs) {
+                MochiPage(
+                    face = faces[StatusWidgetKind.Mochi],
+                    name = mochi.name,
+                    batteryFace = faces[StatusWidgetKind.Battery],
+                    onBack = nav::goBack,
+                    onEdit = { nav.navigate(SetupRoute(StatusWidgetKind.Mochi.name)) }
+                )
+            }
+        }
+        composable<InnerCircleRoute> {
+            Hosted(Atmosphere.DuskBloom, prefs) { InnerCirclePageDestination(viewModel, nav) }
+        }
+        composable<DecideRoute> {
+            val decision by viewModel.decision.collectAsStateWithLifecycle()
+            Hosted(Atmosphere.Peach, prefs) {
+                DecidePage(
+                    decision = decision,
+                    onRoll = viewModel::rollDecision,
+                    onBack = nav::goBack,
+                    onEdit = { nav.navigate(SetupRoute(StatusWidgetKind.Decide.name)) }
+                )
+            }
+        }
+        composable<FocusRoute> {
+            Hosted(Atmosphere.DuskBloom, prefs) { FocusDestination(viewModel, nav) }
+        }
+        composable<AccessRoute> { backStack ->
+            val request = AccessRequest.valueOf(backStack.toRoute<AccessRoute>().request)
+            Hosted(Atmosphere.DuskBloom, prefs) { AccessDestination(request, nav) }
+        }
         composable<SetupRoute> { backStack ->
             val kind = kindNamed(backStack.toRoute<SetupRoute>().kind)
             val toAdd = {
@@ -207,14 +295,24 @@ fun ShellApp(openRequest: MutableStateFlow<StatusWidgetKind?>, viewModel: ShellV
             val default = when (kind) {
                 StatusWidgetKind.InnerCircle -> Atmosphere.DuskBloom
                 StatusWidgetKind.Decide -> Atmosphere.Peach
+                StatusWidgetKind.Time -> Atmosphere.Night
                 else -> Atmosphere.Stone
             }
             Hosted(default, prefs) {
                 when (kind) {
                     StatusWidgetKind.Week -> {
                         val events by viewModel.events.collectAsStateWithLifecycle()
-                        WeekSetupScreen(events, viewModel::setEvents, nav::goBack, toAdd)
+                        val usingCalendar by viewModel.useCalendar.collectAsStateWithLifecycle()
+                        WeekSetupScreen(
+                            events,
+                            viewModel::setEvents,
+                            nav::goBack,
+                            toAdd,
+                            usingCalendar = usingCalendar
+                        )
                     }
+
+                    StatusWidgetKind.Time -> TimeSetupDestination(viewModel, nav)
 
                     StatusWidgetKind.InnerCircle -> InnerCircleDestination(viewModel, nav, toAdd)
 
@@ -356,6 +454,7 @@ private fun CustomizeDestination(kind: StatusWidgetKind, viewModel: ShellViewMod
     var shapeName by rememberSaveable(kind) { mutableStateOf(kind.shapeOptions.firstOrNull()?.name) }
     var size by rememberSaveable { mutableStateOf(PreviewSize.Two) }
     var glow by rememberSaveable { mutableStateOf(true) }
+    var atmosphere by rememberSaveable { mutableStateOf(Atmosphere.CoolMist) }
     val shape = shapeName?.let(ShapeCatalog::valueOf)
     val faceFlow = remember(kind, shape, glow) { viewModel.face(kind, shape, glow) }
     val face by faceFlow.collectAsStateWithLifecycle(null)
@@ -370,10 +469,216 @@ private fun CustomizeDestination(kind: StatusWidgetKind, viewModel: ShellViewMod
         onSizeChange = { size = it },
         onGlowChange = { glow = it },
         onAdd = {
-            val asked = WidgetPinning.isSupported(context) && WidgetPinning.request(context, kind, shape, glow)
+            val asked =
+                WidgetPinning.isSupported(context) && WidgetPinning.request(context, kind, shape, glow, atmosphere)
             if (!asked) nav.navigate(AddByHandRoute(kind.name))
         },
-        onStartSession = if (kind == StatusWidgetKind.Breathe) ({ nav.navigate(BreatheRoute) }) else null
+        atmosphere = atmosphere,
+        onAtmosphereChange = { atmosphere = it },
+        secondaryLabel = when (kind) {
+            StatusWidgetKind.Breathe -> stringResource(R.string.breathe_start)
+            StatusWidgetKind.Time -> stringResource(R.string.customize_open_settings)
+            else -> stringResource(R.string.customize_open, stringResource(kind.label))
+        },
+        onSecondary = when {
+            kind == StatusWidgetKind.Time -> ({ nav.navigate(SetupRoute(kind.name)) })
+            else -> pageFor(kind, viewModel)?.let { page -> { nav.navigate(page) } }
+        }
+    )
+}
+
+/** Asks only when someone taps a feature that needs it. Coming back from settings re-checks. */
+@Composable
+private fun AccessDestination(request: AccessRequest, nav: NavController) {
+    val context = LocalContext.current
+    var stage by rememberSaveable { mutableStateOf(PermissionStage.Ask) }
+    var asked by rememberSaveable { mutableStateOf(false) }
+    val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        stage = if (granted) PermissionStage.Granted else PermissionStage.Denied
+    }
+    LifecycleResumeEffect(Unit) {
+        if (request.isGranted(context)) {
+            stage = PermissionStage.Granted
+        } else if (asked && request.permission == null) {
+            stage = PermissionStage.Denied
+        }
+        onPauseOrDispose {}
+    }
+    val openSystemSettings = {
+        asked = true
+        val packageUri = "package:${context.packageName}".toUri()
+        context.startActivity(
+            if (request.permission == null) {
+                Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, packageUri)
+            } else {
+                Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, packageUri)
+            }
+        )
+    }
+    AccessScreen(
+        request = request,
+        stage = stage,
+        onAllow = {
+            val permission = request.permission
+            if (permission != null) launcher.launch(permission) else openSystemSettings()
+        },
+        onOpenSettings = openSystemSettings,
+        onBack = nav::goBack
+    )
+}
+
+@Composable
+private fun InnerCirclePageDestination(viewModel: ShellViewModel, nav: NavController) {
+    val context = LocalContext.current
+    val people by viewModel.people.collectAsStateWithLifecycle()
+    val senders by ShapesNotificationListener.senders.collectAsStateWithLifecycle()
+    val canSee by NotificationAccess.granted.collectAsStateWithLifecycle()
+    var selected by rememberSaveable { mutableIntStateOf(0) }
+    val withNumber: (Person, (String) -> Unit) -> Unit = { person, action ->
+        if (!AccessRequest.Contacts.isGranted(context)) {
+            nav.navigate(AccessRoute(AccessRequest.Contacts.name))
+        } else {
+            // A contact with no number still gets somewhere useful: their card.
+            context.phoneNumberOf(person)?.let(action) ?: context.openContact(person)
+        }
+    }
+    InnerCirclePage(
+        people = people,
+        messages = messagesPerPerson(people, senders),
+        canSeeMessages = canSee,
+        selectedIndex = selected,
+        onSelect = { selected = it },
+        onBack = nav::goBack,
+        onEdit = { nav.navigate(SetupRoute(StatusWidgetKind.InnerCircle.name)) },
+        onMessage = { person ->
+            withNumber(person) { number -> context.startSafely(Intent(Intent.ACTION_SENDTO, "smsto:$number".toUri())) }
+        },
+        onCall = { person ->
+            withNumber(person) { number -> context.startSafely(Intent(Intent.ACTION_DIAL, "tel:$number".toUri())) }
+        },
+        // Android has no general video call action. The contact card lists the person's video apps.
+        onVideo = { person -> context.openContact(person) },
+        onTurnOnMessages = { nav.navigate(PermissionRoute(StatusWidgetKind.Alerts.name)) }
+    )
+}
+
+private fun Context.startSafely(intent: Intent) {
+    try {
+        startActivity(intent)
+    } catch (_: ActivityNotFoundException) {
+        // Nothing on this device handles it, as with calling on a tablet.
+    }
+}
+
+private fun Context.openContact(person: Person) = startSafely(Intent(Intent.ACTION_VIEW, person.lookupUri.toUri()))
+
+private fun Context.phoneNumberOf(person: Person): String? = try {
+    val id = contentResolver.query(
+        person.lookupUri.toUri(),
+        arrayOf(ContactsContract.Contacts._ID),
+        null,
+        null,
+        null
+    )?.use { if (it.moveToFirst()) it.getLong(0) else null }
+    id?.let {
+        contentResolver.query(
+            ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+            arrayOf(ContactsContract.CommonDataKinds.Phone.NUMBER),
+            "${ContactsContract.CommonDataKinds.Phone.CONTACT_ID} = ?",
+            arrayOf(it.toString()),
+            null
+        )?.use { cursor -> if (cursor.moveToFirst()) cursor.getString(0) else null }
+    }
+} catch (_: SecurityException) {
+    null
+}
+
+/** Ticks once a second while open. The state itself lives on disk, so it keeps running when closed. */
+@Composable
+private fun FocusDestination(viewModel: ShellViewModel, nav: NavController) {
+    val stored by viewModel.focus.collectAsStateWithLifecycle()
+    var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(1_000)
+            now = System.currentTimeMillis()
+        }
+    }
+    val current = stored.settledAt(now)
+    FocusPage(
+        state = current,
+        nowMs = now,
+        onBack = nav::goBack,
+        onToggle = {
+            val at = System.currentTimeMillis()
+            now = at
+            viewModel.updateFocus { state ->
+                val settled = state.settledAt(at)
+                if (settled.isRunning) settled.paused(at) else settled.started(at)
+            }
+        },
+        onReset = { viewModel.updateFocus { it.settledAt(System.currentTimeMillis()).restarted() } },
+        onSkip = { viewModel.updateFocus { it.settledAt(System.currentTimeMillis()).next() } }
+    )
+}
+
+@Composable
+private fun TimeSetupDestination(viewModel: ShellViewModel, nav: NavController) {
+    val context = LocalContext.current
+    val settings by viewModel.timeSettings.collectAsStateWithLifecycle()
+    var wantsSunset by rememberSaveable { mutableStateOf(false) }
+    var wantsExact by rememberSaveable { mutableStateOf(false) }
+    var refresh by remember { mutableIntStateOf(0) }
+    val latest by rememberUpdatedState(settings)
+    LifecycleResumeEffect(Unit) {
+        if (wantsExact) {
+            wantsExact = false
+            if (AccessRequest.ExactAlarm.isGranted(context)) viewModel.setTimeSettings(latest.copy(exactMinute = true))
+        }
+        refresh++
+        onPauseOrDispose {}
+    }
+    // Finding a position is asynchronous, so it runs here rather than inside the resume check.
+    LaunchedEffect(refresh, wantsSunset) {
+        if (wantsSunset && AccessRequest.Location.isGranted(context)) {
+            wantsSunset = false
+            val position = context.coarsePosition()
+            viewModel.setTimeSettings(
+                latest.copy(switchAtSunset = true, latitude = position?.first, longitude = position?.second)
+            )
+        }
+    }
+    TimeSetupScreen(
+        settings = settings,
+        locationMissing = settings.switchAtSunset && settings.latitude == null,
+        onChange = viewModel::setTimeSettings,
+        onSunsetToggle = { on ->
+            if (!on) {
+                viewModel.setTimeSettings(settings.copy(switchAtSunset = false))
+            } else {
+                wantsSunset = true
+                if (!AccessRequest.Location.isGranted(context)) {
+                    nav.navigate(AccessRoute(AccessRequest.Location.name))
+                }
+            }
+        },
+        onExactToggle = { on ->
+            when {
+                !on -> viewModel.setTimeSettings(settings.copy(exactMinute = false))
+
+                AccessRequest.ExactAlarm.isGranted(context) ->
+                    viewModel.setTimeSettings(settings.copy(exactMinute = true))
+
+                else -> {
+                    wantsExact = true
+                    nav.navigate(AccessRoute(AccessRequest.ExactAlarm.name))
+                }
+            }
+        },
+        onBack = nav::goBack,
+        onSave = {
+            nav.navigate(CustomizeRoute(StatusWidgetKind.Time.name)) { popUpTo<SetupRoute> { inclusive = true } }
+        }
     )
 }
 
@@ -468,10 +773,16 @@ private fun Context.openNotificationAccessSettings() {
 private fun SettingsDestination(prefs: AppPreferences, viewModel: ShellViewModel, nav: NavController) {
     val context = LocalContext.current
     val notificationsAllowed by NotificationAccess.granted.collectAsStateWithLifecycle()
+    val useCalendar by viewModel.useCalendar.collectAsStateWithLifecycle()
+    var wantsCalendar by rememberSaveable { mutableStateOf(false) }
     var backgroundAllowed by remember { mutableStateOf(context.isBackgroundAllowed()) }
     LifecycleResumeEffect(Unit) {
         NotificationAccess.refresh(context)
         backgroundAllowed = context.isBackgroundAllowed()
+        if (wantsCalendar) {
+            wantsCalendar = false
+            if (AccessRequest.Calendar.isGranted(context)) viewModel.setUseCalendar(true)
+        }
         onPauseOrDispose {}
     }
     SettingsScreen(
@@ -479,6 +790,7 @@ private fun SettingsDestination(prefs: AppPreferences, viewModel: ShellViewModel
         theme = prefs.theme,
         atmosphere = prefs.atmosphere,
         notificationsAllowed = notificationsAllowed,
+        calendarOn = useCalendar,
         backgroundAllowed = backgroundAllowed,
         version = context.versionName(),
         showFoundation = context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0,
@@ -490,6 +802,18 @@ private fun SettingsDestination(prefs: AppPreferences, viewModel: ShellViewModel
                 context.openNotificationAccessSettings()
             } else {
                 nav.navigate(PermissionRoute(StatusWidgetKind.Alerts.name))
+            }
+        },
+        onCalendarClick = {
+            when {
+                useCalendar -> viewModel.setUseCalendar(false)
+
+                AccessRequest.Calendar.isGranted(context) -> viewModel.setUseCalendar(true)
+
+                else -> {
+                    wantsCalendar = true
+                    nav.navigate(AccessRoute(AccessRequest.Calendar.name))
+                }
             }
         },
         onBackgroundClick = { context.startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)) },
@@ -510,7 +834,10 @@ private fun AboutDestination(nav: NavController) {
         onBack = nav::goBack,
         onLicencesClick = { licences = context.readLicences(libraries) },
         onLicencesDismiss = { licences = null },
-        onRateClick = { context.openPlayListing() }
+        onRateClick = { context.openPlayListing() },
+        onFeedbackClick = FEEDBACK_ADDRESS.takeIf { it.isNotBlank() }?.let { address ->
+            { context.startSafely(Intent(Intent.ACTION_SENDTO, "mailto:$address".toUri())) }
+        }
     )
 }
 

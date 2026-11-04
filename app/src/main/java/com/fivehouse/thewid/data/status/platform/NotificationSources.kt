@@ -54,8 +54,9 @@ object NotificationAccess {
 }
 
 /**
- * Keeps a count and nothing else. This must never read a notification's title, text or extras: the
- * permission screen promises it only counts.
+ * Keeps a count, plus the sender name of message notifications to match against the Inner Circle.
+ * Names stay in memory only. This must never read a notification's text: the permission screen
+ * promises that.
  */
 class ShapesNotificationListener : NotificationListenerService() {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -71,6 +72,7 @@ class ShapesNotificationListener : NotificationListenerService() {
         NotificationAccess.refresh(this)
         scope.coroutineContext.cancelChildren()
         count.value = null
+        messageSenders.value = emptyList()
     }
 
     override fun onNotificationPosted(sbn: StatusBarNotification) = recount()
@@ -89,6 +91,9 @@ class ShapesNotificationListener : NotificationListenerService() {
         } catch (_: SecurityException) {
             null // Access was revoked or the listener isn't bound yet.
         }
+        messageSenders.value = active.orEmpty()
+            .filter { it.notification.category == Notification.CATEGORY_MESSAGE }
+            .mapNotNull { it.notification.extras.getCharSequence(Notification.EXTRA_TITLE)?.toString() }
         count.value = active?.count { sbn ->
             countsAsAlert(
                 isOngoing = sbn.isOngoing,
@@ -111,6 +116,10 @@ class ShapesNotificationListener : NotificationListenerService() {
 
     companion object {
         private val count = MutableStateFlow<Int?>(null)
+        private val messageSenders = MutableStateFlow<List<String>>(emptyList())
+
+        /** Who waiting messages are from, for the Inner Circle's "new messages". */
+        val senders: StateFlow<List<String>> = messageSenders.asStateFlow()
 
         /** The current count, or null while the listener isn't connected. */
         val alertCount: StateFlow<Int?> = count.asStateFlow()
@@ -171,6 +180,8 @@ class AndroidNowPlayingSource(context: Context) : NowPlayingSource {
 
     private fun MediaController.toSnapshot(): MediaSnapshot {
         val metadata = metadata
+        val duration = metadata?.getLong(MediaMetadata.METADATA_KEY_DURATION)?.takeIf { it > 0 }
+        val position = playbackState?.position?.takeIf { it >= 0 }
         return MediaSnapshot(
             title = metadata?.getString(MediaMetadata.METADATA_KEY_TITLE),
             artist = metadata?.getString(MediaMetadata.METADATA_KEY_ARTIST),
@@ -179,7 +190,9 @@ class AndroidNowPlayingSource(context: Context) : NowPlayingSource {
             art = (
                 metadata?.getBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART)
                     ?: metadata?.getBitmap(MediaMetadata.METADATA_KEY_ART)
-                )?.bounded()
+                )?.bounded(),
+            leftMs = if (duration != null && position != null) (duration - position).coerceAtLeast(0) else null,
+            durationMs = duration
         )
     }
 
@@ -188,5 +201,35 @@ class AndroidNowPlayingSource(context: Context) : NowPlayingSource {
         val longest = maxOf(width, height)
         if (longest <= MAX_ART_PX) return this
         return scale(width * MAX_ART_PX / longest, height * MAX_ART_PX / longest)
+    }
+}
+
+/** Play, pause and skip for whichever media session is showing. */
+class MediaTransport(context: Context) {
+    private val appContext = context.applicationContext
+
+    private fun active(): MediaController? = try {
+        val sessions = appContext.getSystemService(MediaSessionManager::class.java)
+            .getActiveSessions(ComponentName(appContext, ShapesNotificationListener::class.java))
+        sessions.firstOrNull { it.playbackState?.state == PlaybackState.STATE_PLAYING } ?: sessions.firstOrNull()
+    } catch (_: SecurityException) {
+        null
+    }
+
+    fun playPause() {
+        val controller = active() ?: return
+        if (controller.playbackState?.state == PlaybackState.STATE_PLAYING) {
+            controller.transportControls.pause()
+        } else {
+            controller.transportControls.play()
+        }
+    }
+
+    fun next() {
+        active()?.transportControls?.skipToNext()
+    }
+
+    fun previous() {
+        active()?.transportControls?.skipToPrevious()
     }
 }

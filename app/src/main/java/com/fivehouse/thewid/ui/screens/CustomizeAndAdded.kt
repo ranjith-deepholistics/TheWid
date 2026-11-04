@@ -55,6 +55,7 @@ import com.fivehouse.thewid.ui.theme.Ink
 import com.fivehouse.thewid.ui.theme.Numerals
 import com.fivehouse.thewid.widget.StatusFace
 import com.fivehouse.thewid.widget.StatusWidgetKind
+import com.fivehouse.thewid.widget.WidgetTint
 import com.fivehouse.thewid.widget.toFace
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -63,7 +64,8 @@ import java.time.format.FormatStyle
 enum class PreviewSize(val label: Int) {
     One(R.string.size_1x1),
     Two(R.string.size_2x2),
-    Wide(R.string.size_4x2)
+    Wide(R.string.size_4x2),
+    Large(R.string.size_4x4)
 }
 
 /** Screen 5. */
@@ -80,7 +82,10 @@ fun CustomizeScreen(
     onGlowChange: (Boolean) -> Unit,
     onAdd: () -> Unit,
     modifier: Modifier = Modifier,
-    onStartSession: (() -> Unit)? = null
+    atmosphere: Atmosphere = Atmosphere.CoolMist,
+    onAtmosphereChange: (Atmosphere) -> Unit = {},
+    secondaryLabel: String? = null,
+    onSecondary: (() -> Unit)? = null
 ) {
     Column(
         modifier
@@ -98,7 +103,7 @@ fun CustomizeScreen(
                 BackButton(onBack, Modifier.align(Alignment.CenterStart))
                 Text(stringResource(kind.label), style = MaterialTheme.typography.titleMedium)
             }
-            CustomizePreview(kind, face, size)
+            CustomizePreview(kind, face?.inAtmosphere(atmosphere), size)
             if (kind.shapeOptions.isNotEmpty()) {
                 Text(
                     stringResource(R.string.customize_shape_named, shape?.name.orEmpty().uppercase()),
@@ -106,6 +111,11 @@ fun CustomizeScreen(
                 )
                 ShapeOptions(kind.shapeOptions, shape, onShapeChange)
             }
+            Text(
+                stringResource(R.string.customize_atmosphere_named, atmosphere.name.uppercase()),
+                style = MaterialTheme.typography.labelSmall
+            )
+            AtmosphereSwatches(Atmosphere.entries, atmosphere, { if (it != null) onAtmosphereChange(it) })
             SegmentedPills(
                 options = PreviewSize.entries,
                 selected = size,
@@ -141,14 +151,15 @@ fun CustomizeScreen(
                 style = MaterialTheme.typography.bodySmall
             )
         }
-        if (onStartSession != null) {
-            TextButton(onClick = onStartSession, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.breathe_start))
-            }
+        if (onSecondary != null && secondaryLabel != null) {
+            TextButton(onClick = onSecondary, modifier = Modifier.fillMaxWidth()) { Text(secondaryLabel) }
         }
         PrimaryPill(stringResource(R.string.customize_add), onAdd)
     }
 }
+
+private fun StatusFace.inAtmosphere(atmosphere: Atmosphere) =
+    if (tint == WidgetTint) copy(tint = atmosphere.gloss) else this
 
 @Composable
 private fun CustomizePreview(

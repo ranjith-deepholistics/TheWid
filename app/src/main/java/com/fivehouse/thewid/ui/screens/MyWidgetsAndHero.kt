@@ -196,6 +196,7 @@ private val WidgetLayout.sizeLabel: Int
         WidgetLayout.ShapeOnly -> R.string.size_1x1
         WidgetLayout.Square -> R.string.size_2x2
         WidgetLayout.Wide -> R.string.size_4x2
+        WidgetLayout.Large -> R.string.size_4x4
     }
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -230,7 +231,7 @@ private fun EmptyWidgets(onQuickAdd: (StatusWidgetKind) -> Unit, onBrowse: () ->
         Text(stringResource(R.string.empty_body), style = MaterialTheme.typography.bodyMedium)
         Spacer(Modifier.height(12.dp))
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf(StatusWidgetKind.Time, StatusWidgetKind.Battery, StatusWidgetKind.Sound).forEach { kind ->
+            listOf(StatusWidgetKind.Time, StatusWidgetKind.Battery, StatusWidgetKind.Mochi).forEach { kind ->
                 TextButton(onClick = { onQuickAdd(kind) }) { Text(stringResource(kind.label)) }
             }
         }
