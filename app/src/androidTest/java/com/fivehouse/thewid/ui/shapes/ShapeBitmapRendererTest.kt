@@ -61,6 +61,14 @@ class ShapeBitmapRendererTest {
         assertTrue("dashed $dashed vs solid $solid", dashed < solid)
     }
 
+    @Test
+    fun albumArtFillsTheShapeInsteadOfTheGloss() {
+        val art = Bitmap.createBitmap(4, 4, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.RED) }
+        val bitmap = ShapeBitmapRenderer.render(ShapeCatalog.Circle, SIZE, 2f, GlossTint.Accent, art = art)
+        assertEquals(Color.RED, bitmap.getPixel(SIZE / 2, SIZE / 2))
+        assertEquals(0, Color.alpha(bitmap.getPixel(0, 0)))
+    }
+
     private fun Bitmap.hasOpaquePixel(): Boolean = IntArray(width * height).also {
         getPixels(it, 0, width, 0, 0, width, height)
     }.any { Color.alpha(it) == OPAQUE }

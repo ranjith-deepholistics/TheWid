@@ -128,7 +128,16 @@ fun CustomizeScreen(
         ) {
             Icon(painterResource(R.drawable.ic_check), null, Modifier.size(14.dp))
             Spacer(Modifier.size(4.dp))
-            Text(stringResource(R.string.customize_no_permission), style = MaterialTheme.typography.bodySmall)
+            Text(
+                stringResource(
+                    if (kind.needsNotificationAccess) {
+                        R.string.customize_uses_notification_access
+                    } else {
+                        R.string.customize_no_permission
+                    }
+                ),
+                style = MaterialTheme.typography.bodySmall
+            )
         }
         PrimaryPill(stringResource(R.string.customize_add), onAdd)
     }

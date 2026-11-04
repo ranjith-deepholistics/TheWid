@@ -40,9 +40,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.fivehouse.thewid.R
 import com.fivehouse.thewid.data.status.AlarmStatus
+import com.fivehouse.thewid.data.status.AlertsStatus
 import com.fivehouse.thewid.data.status.BatteryStatus
 import com.fivehouse.thewid.data.status.CellularNetwork
 import com.fivehouse.thewid.data.status.CellularStatus
+import com.fivehouse.thewid.data.status.NowPlayingStatus
 import com.fivehouse.thewid.data.status.SoundStatus
 import com.fivehouse.thewid.data.status.TimeStatus
 import com.fivehouse.thewid.data.status.WifiStatus
@@ -365,7 +367,7 @@ private fun CatalogTile(
             }
             Text(stringResource(widget.label), style = MaterialTheme.typography.bodySmall)
         }
-        if (widget.needsPermission) {
+        if (widget.needsPermission && (face == null || face.needsAccess)) {
             Icon(
                 painterResource(R.drawable.ic_lock),
                 null,
@@ -387,7 +389,9 @@ internal val PreviewFacesMap: Map<StatusWidgetKind, StatusFace> = mapOf(
     StatusWidgetKind.Wifi to WifiStatus.Off.toFace(),
     StatusWidgetKind.Sound to SoundStatus.Silent.toFace(),
     StatusWidgetKind.Time to TimeStatus(ZonedDateTime.parse("2026-11-02T09:42:00+05:30"), isDay = true).toFace(),
-    StatusWidgetKind.Alarm to AlarmStatus.None.toFace(ZoneOffset.UTC, true)
+    StatusWidgetKind.Alarm to AlarmStatus.None.toFace(ZoneOffset.UTC, true),
+    StatusWidgetKind.Alerts to AlertsStatus.Count(2).toFace(),
+    StatusWidgetKind.NowPlaying to NowPlayingStatus.NoAccess.toFace()
 )
 
 @Preview(widthDp = 390, heightDp = 844)

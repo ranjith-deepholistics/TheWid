@@ -113,6 +113,10 @@ class AlarmWidget : StatusWidget(StatusWidgetKind.Alarm)
 
 class TimeWidget : StatusWidget(StatusWidgetKind.Time)
 
+class AlertsWidget : StatusWidget(StatusWidgetKind.Alerts)
+
+class NowPlayingWidget : StatusWidget(StatusWidgetKind.NowPlaying)
+
 fun Preferences.glow(): Boolean = this[WidgetGlowKey] ?: true
 
 fun Preferences.chosenShape(): ShapeCatalog? =
@@ -136,10 +140,12 @@ fun StatusWidgetContent(face: StatusFace, label: String) {
 
         WidgetLayout.Square -> SquareLayout(face, label, open)
 
-        WidgetLayout.ShapeOnly -> ShapeImage(
+        WidgetLayout.ShapeOnly -> ShapeWithValue(
             face,
+            label,
             faceDescription(face, label),
             minOf(size.width, size.height),
+            SQUARE_NUMERAL_SP,
             open.fillMaxSize()
         )
     }
@@ -153,12 +159,12 @@ private fun SquareLayout(face: StatusFace, label: String, modifier: GlanceModifi
             .background(ImageProvider(R.drawable.widget_glass))
             .padding(14.dp)
     ) {
-        LabelRow(label, face.isLive)
+        LabelRow(face, label)
         Spacer(GlanceModifier.defaultWeight())
         Row(GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
-            FaceValueView(face, label, SQUARE_NUMERAL_SP)
+            if (!face.valueInside) FaceValueView(face, label, SQUARE_NUMERAL_SP)
             Spacer(GlanceModifier.defaultWeight())
-            ShapeImage(face, null, SquareShape, GlanceModifier.size(SquareShape))
+            ShapeWithValue(face, label, null, SquareShape, SQUARE_NUMERAL_SP, GlanceModifier.size(SquareShape))
         }
     }
 }
@@ -173,18 +179,21 @@ private fun WideLayout(face: StatusFace, label: String, modifier: GlanceModifier
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(GlanceModifier.defaultWeight()) {
-            LabelRow(label, face.isLive)
-            Spacer(GlanceModifier.size(8.dp))
-            FaceValueView(face, label, WIDE_NUMERAL_SP)
+            LabelRow(face, label)
+            if (!face.valueInside) {
+                Spacer(GlanceModifier.size(8.dp))
+                FaceValueView(face, label, WIDE_NUMERAL_SP)
+            }
         }
-        ShapeImage(face, null, WideShape, GlanceModifier.size(WideShape))
+        ShapeWithValue(face, label, null, WideShape, WIDE_NUMERAL_SP, GlanceModifier.size(WideShape))
     }
 }
 
+/** Shows the track title in place of the widget's name when there is one. */
 @Composable
-private fun LabelRow(label: String, isLive: Boolean) {
+private fun LabelRow(face: StatusFace, label: String) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        if (isLive) {
+        if (face.isLive) {
             Image(
                 provider = ImageProvider(R.drawable.widget_live_dot),
                 contentDescription = LocalContext.current.getString(R.string.widget_live),
@@ -193,7 +202,40 @@ private fun LabelRow(label: String, isLive: Boolean) {
             )
             Spacer(GlanceModifier.width(6.dp))
         }
-        Text(label, style = TextStyle(color = ColorProvider(Ink), fontWeight = FontWeight.Medium))
+        if (face.needsAccess) {
+            Image(
+                provider = ImageProvider(R.drawable.ic_lock),
+                contentDescription = LocalContext.current.getString(R.string.widget_needs_access),
+                modifier = GlanceModifier.size(14.dp),
+                colorFilter = ColorFilter.tint(ColorProvider(Accent))
+            )
+            Spacer(GlanceModifier.width(4.dp))
+        }
+        Text(
+            face.caption ?: label,
+            style = TextStyle(color = ColorProvider(Ink), fontWeight = FontWeight.Medium),
+            maxLines = 1
+        )
+    }
+}
+
+/** The shape, with its value on top for faces that keep the number inside, such as Alerts. */
+@Composable
+private fun ShapeWithValue(
+    face: StatusFace,
+    label: String,
+    description: String?,
+    size: Dp,
+    numeralSp: Float,
+    modifier: GlanceModifier
+) {
+    if (!face.valueInside) {
+        ShapeImage(face, description, size, modifier)
+        return
+    }
+    Box(modifier, contentAlignment = Alignment.Center) {
+        ShapeImage(face, description, size, GlanceModifier.fillMaxSize())
+        FaceValueView(face, label, numeralSp)
     }
 }
 
@@ -245,7 +287,8 @@ private fun ShapeImage(face: StatusFace, description: String?, size: Dp, modifie
             tint = face.tint,
             fill = face.fill,
             surface = face.surface,
-            clock = face.clock
+            clock = face.clock,
+            art = face.art
         )
     }
     Image(

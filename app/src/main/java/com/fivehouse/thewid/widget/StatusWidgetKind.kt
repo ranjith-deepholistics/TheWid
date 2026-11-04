@@ -13,7 +13,8 @@ import kotlin.reflect.KClass
 enum class StatusWidgetKind(
     @param:StringRes val label: Int,
     val receiver: KClass<out GlanceAppWidgetReceiver>,
-    val shapeOptions: List<ShapeCatalog>
+    val shapeOptions: List<ShapeCatalog>,
+    val needsNotificationAccess: Boolean = false
 ) {
     Battery(
         R.string.widget_battery,
@@ -60,7 +61,14 @@ enum class StatusWidgetKind(
             ShapeCatalog.Oval
         )
     ),
-    Time(R.string.widget_time, TimeWidgetReceiver::class, emptyList());
+    Time(R.string.widget_time, TimeWidgetReceiver::class, emptyList()),
+    Alerts(R.string.widget_alerts, AlertsWidgetReceiver::class, emptyList(), needsNotificationAccess = true),
+    NowPlaying(
+        R.string.widget_now_playing,
+        NowPlayingWidgetReceiver::class,
+        emptyList(),
+        needsNotificationAccess = true
+    );
 
     fun newWidget(): StatusWidget = when (this) {
         Battery -> BatteryWidget()
@@ -69,6 +77,8 @@ enum class StatusWidgetKind(
         Sound -> SoundWidget()
         Alarm -> AlarmWidget()
         Time -> TimeWidget()
+        Alerts -> AlertsWidget()
+        NowPlaying -> NowPlayingWidget()
     }
 
     companion object {
@@ -99,4 +109,12 @@ class AlarmWidgetReceiver : GlanceAppWidgetReceiver() {
 
 class TimeWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget = StatusWidgetKind.Time.newWidget()
+}
+
+class AlertsWidgetReceiver : GlanceAppWidgetReceiver() {
+    override val glanceAppWidget = StatusWidgetKind.Alerts.newWidget()
+}
+
+class NowPlayingWidgetReceiver : GlanceAppWidgetReceiver() {
+    override val glanceAppWidget = StatusWidgetKind.NowPlaying.newWidget()
 }

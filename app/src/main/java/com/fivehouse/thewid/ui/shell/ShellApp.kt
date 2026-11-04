@@ -34,6 +34,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import com.fivehouse.thewid.R
 import com.fivehouse.thewid.data.settings.AppPreferences
+import com.fivehouse.thewid.data.status.platform.NotificationAccess
 import com.fivehouse.thewid.ui.catalog.FoundationCatalogRoute
 import com.fivehouse.thewid.ui.components.AtmosphereBackground
 import com.fivehouse.thewid.ui.screens.AboutScreen
@@ -45,6 +46,8 @@ import com.fivehouse.thewid.ui.screens.HeroPickerScreen
 import com.fivehouse.thewid.ui.screens.LibraryScreen
 import com.fivehouse.thewid.ui.screens.MyWidgetsScreen
 import com.fivehouse.thewid.ui.screens.OnboardingScreen
+import com.fivehouse.thewid.ui.screens.PermissionScreen
+import com.fivehouse.thewid.ui.screens.PermissionStage
 import com.fivehouse.thewid.ui.screens.PreviewSize
 import com.fivehouse.thewid.ui.screens.SearchScreen
 import com.fivehouse.thewid.ui.screens.SettingsScreen
@@ -53,6 +56,7 @@ import com.fivehouse.thewid.ui.shapes.ShapeCatalog
 import com.fivehouse.thewid.ui.theme.Atmosphere
 import com.fivehouse.thewid.ui.theme.ShapesTheme
 import com.fivehouse.thewid.ui.widgetconfig.WidgetConfigureActivity
+import com.fivehouse.thewid.widget.StatusFace
 import com.fivehouse.thewid.widget.StatusWidgetKind
 import com.fivehouse.thewid.widget.WidgetPinning
 import kotlinx.serialization.Serializable
@@ -66,6 +70,8 @@ import kotlinx.serialization.Serializable
 @Serializable private data class CategoryRoute(val category: String)
 
 @Serializable private data class CustomizeRoute(val kind: String)
+
+@Serializable private data class PermissionRoute(val kind: String)
 
 @Serializable private data class AddedRoute(val kind: String)
 
@@ -102,7 +108,16 @@ fun ShellApp(viewModel: ShellViewModel = hiltViewModel()) {
         }
     }
 
-    val toCustomize: (StatusWidgetKind) -> Unit = { nav.navigate(CustomizeRoute(it.name)) }
+    val notificationAccess by NotificationAccess.granted.collectAsStateWithLifecycle()
+
+    // Permission is only ever asked for here, after someone taps a widget that needs it.
+    val toCustomize: (StatusWidgetKind) -> Unit = { kind ->
+        if (kind.needsNotificationAccess && !notificationAccess) {
+            nav.navigate(PermissionRoute(kind.name))
+        } else {
+            nav.navigate(CustomizeRoute(kind.name))
+        }
+    }
 
     NavHost(nav, startDestination = SplashRoute) {
         composable<SplashRoute> {
@@ -149,6 +164,10 @@ fun ShellApp(viewModel: ShellViewModel = hiltViewModel()) {
             val kind = kindNamed(entry.toRoute<CustomizeRoute>().kind)
             Hosted(Atmosphere.Moss, prefs) { CustomizeDestination(kind, viewModel, nav) }
         }
+        composable<PermissionRoute> { entry ->
+            val kind = kindNamed(entry.toRoute<PermissionRoute>().kind)
+            Hosted(Atmosphere.DuskBloom, prefs) { PermissionDestination(kind, faces[kind], nav) }
+        }
         composable<AddedRoute> { entry ->
             val kind = kindNamed(entry.toRoute<AddedRoute>().kind)
             Hosted(Atmosphere.Peach, prefs) {
@@ -194,6 +213,7 @@ fun ShellApp(viewModel: ShellViewModel = hiltViewModel()) {
             var selected by rememberSaveable { mutableStateOf(prefs.hero) }
             Hosted(Atmosphere.CoolMist, prefs) {
                 HeroPickerScreen(
+                    options = StatusWidgetKind.entries.filter { !it.needsNotificationAccess || notificationAccess },
                     selected = selected,
                     faces = faces,
                     onSelect = { selected = it },
@@ -278,11 +298,53 @@ private fun CustomizeDestination(kind: StatusWidgetKind, viewModel: ShellViewMod
     )
 }
 
+/** Screens 6, 11 and 12. Returning from system settings decides whether it was granted or still off. */
+@Composable
+private fun PermissionDestination(kind: StatusWidgetKind, face: StatusFace?, nav: NavController) {
+    val context = LocalContext.current
+    var stage by rememberSaveable { mutableStateOf(PermissionStage.Ask) }
+    var openedSettings by rememberSaveable { mutableStateOf(false) }
+    LifecycleResumeEffect(Unit) {
+        NotificationAccess.refresh(context)
+        if (NotificationAccess.granted.value) {
+            stage = PermissionStage.Granted
+        } else if (openedSettings) {
+            stage = PermissionStage.Denied
+        }
+        onPauseOrDispose {}
+    }
+    PermissionScreen(
+        kind = kind,
+        stage = stage,
+        face = face,
+        productName = stringResource(R.string.product_name),
+        listedName = stringResource(R.string.app_name),
+        onOpenSettings = {
+            openedSettings = true
+            context.openNotificationAccessSettings()
+        },
+        onBack = nav::goBack,
+        onAdd = {
+            val asked = WidgetPinning.isSupported(context) && WidgetPinning.request(context, kind, null, true)
+            if (!asked) nav.navigate(AddByHandRoute(kind.name))
+        },
+        onCustomize = {
+            nav.navigate(CustomizeRoute(kind.name)) { popUpTo<PermissionRoute> { inclusive = true } }
+        }
+    )
+}
+
+private fun Context.openNotificationAccessSettings() {
+    startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
+}
+
 @Composable
 private fun SettingsDestination(prefs: AppPreferences, viewModel: ShellViewModel, nav: NavController) {
     val context = LocalContext.current
+    val notificationsAllowed by NotificationAccess.granted.collectAsStateWithLifecycle()
     var backgroundAllowed by remember { mutableStateOf(context.isBackgroundAllowed()) }
     LifecycleResumeEffect(Unit) {
+        NotificationAccess.refresh(context)
         backgroundAllowed = context.isBackgroundAllowed()
         onPauseOrDispose {}
     }
@@ -290,12 +352,20 @@ private fun SettingsDestination(prefs: AppPreferences, viewModel: ShellViewModel
         hero = prefs.hero,
         theme = prefs.theme,
         atmosphere = prefs.atmosphere,
+        notificationsAllowed = notificationsAllowed,
         backgroundAllowed = backgroundAllowed,
         version = context.versionName(),
         showFoundation = context.applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0,
         onBack = nav::goBack,
         onThemeChange = viewModel::setTheme,
         onAtmosphereChange = viewModel::setAtmosphere,
+        onNotificationsClick = {
+            if (notificationsAllowed) {
+                context.openNotificationAccessSettings()
+            } else {
+                nav.navigate(PermissionRoute(StatusWidgetKind.Alerts.name))
+            }
+        },
         onBackgroundClick = { context.startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)) },
         onHeroClick = { nav.navigate(HeroPickerRoute) },
         onAboutClick = { nav.navigate(AboutRoute) },

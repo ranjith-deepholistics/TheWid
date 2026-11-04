@@ -3,14 +3,18 @@ package com.fivehouse.thewid.widget
 import android.content.Context
 import android.text.format.DateFormat
 import com.fivehouse.thewid.data.status.AlarmRepository
+import com.fivehouse.thewid.data.status.AlertsRepository
 import com.fivehouse.thewid.data.status.BatteryRepository
 import com.fivehouse.thewid.data.status.CellularRepository
+import com.fivehouse.thewid.data.status.NowPlayingRepository
 import com.fivehouse.thewid.data.status.SoundRepository
 import com.fivehouse.thewid.data.status.TimeRepository
 import com.fivehouse.thewid.data.status.WifiRepository
 import com.fivehouse.thewid.data.status.platform.AndroidAlarmSource
+import com.fivehouse.thewid.data.status.platform.AndroidAlertsSource
 import com.fivehouse.thewid.data.status.platform.AndroidBatterySource
 import com.fivehouse.thewid.data.status.platform.AndroidCellularSource
+import com.fivehouse.thewid.data.status.platform.AndroidNowPlayingSource
 import com.fivehouse.thewid.data.status.platform.AndroidSoundSource
 import com.fivehouse.thewid.data.status.platform.AndroidTimeSource
 import com.fivehouse.thewid.data.status.platform.AndroidWifiSource
@@ -37,7 +41,9 @@ class StatusFaces @Inject constructor(
     private val wifi: WifiRepository,
     private val sound: SoundRepository,
     private val alarm: AlarmRepository,
-    private val time: TimeRepository
+    private val time: TimeRepository,
+    private val alerts: AlertsRepository,
+    private val nowPlaying: NowPlayingRepository
 ) {
     /**
      * @param shape the user's choice. Ignored for kinds whose shape reports the state.
@@ -59,6 +65,10 @@ class StatusFaces @Inject constructor(
             }
 
             StatusWidgetKind.Time -> time.status.map { it.toFace() }
+
+            StatusWidgetKind.Alerts -> alerts.status.map { it.toFace() }
+
+            StatusWidgetKind.NowPlaying -> nowPlaying.status.map { it.toFace() }
         }
     }
 }
@@ -89,6 +99,14 @@ object StatusModule {
     @Provides
     @Singleton
     fun time(@ApplicationContext context: Context) = TimeRepository(AndroidTimeSource(context))
+
+    @Provides
+    @Singleton
+    fun alerts() = AlertsRepository(AndroidAlertsSource())
+
+    @Provides
+    @Singleton
+    fun nowPlaying(@ApplicationContext context: Context) = NowPlayingRepository(AndroidNowPlayingSource(context))
 }
 
 /** Widgets are created by the system, so they reach Hilt through this instead of injection. */

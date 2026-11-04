@@ -24,7 +24,8 @@ object ShapeBitmapRenderer {
         surface: ShapeSurface = ShapeSurface.Glossy,
         outlineColor: Color = Ink,
         castShadow: Boolean = false,
-        clock: ClockMarks? = null
+        clock: ClockMarks? = null,
+        art: Bitmap? = null
     ): Bitmap {
         val bitmap = Bitmap.createBitmap(sizePx, sizePx, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
@@ -35,7 +36,7 @@ object ShapeBitmapRenderer {
             unitPath = shape.polygon.toPath(Path()),
             width = size,
             height = size,
-            spec = ShapePaintSpec(fill.coerceIn(0f, 1f), surface, tint, outlineColor, castShadow)
+            spec = ShapePaintSpec(fill.coerceIn(0f, 1f), surface, tint, outlineColor, castShadow, art)
         )
         if (clock != null) painter.drawClock(canvas, size, clock)
         return bitmap

@@ -23,8 +23,13 @@ enum class CatalogWidget(
     Sound(R.string.widget_sound, ShapeCatalog.Circle, StatusWidgetKind.Sound),
     Alarm(R.string.widget_alarm, ShapeCatalog.SemiCircle, StatusWidgetKind.Alarm),
     Time(R.string.widget_time, ShapeCatalog.Sunny, StatusWidgetKind.Time),
-    Alerts(R.string.widget_alerts, ShapeCatalog.Clover4Leaf, needsPermission = true),
-    NowPlaying(R.string.widget_now_playing, ShapeCatalog.Cookie12Sided, needsPermission = true),
+    Alerts(R.string.widget_alerts, ShapeCatalog.Clover4Leaf, StatusWidgetKind.Alerts, needsPermission = true),
+    NowPlaying(
+        R.string.widget_now_playing,
+        ShapeCatalog.Cookie12Sided,
+        StatusWidgetKind.NowPlaying,
+        needsPermission = true
+    ),
     Week(R.string.widget_week, ShapeCatalog.Diamond),
     Mochi(R.string.widget_mochi, ShapeCatalog.Puffy),
     Breathe(R.string.widget_breathe, ShapeCatalog.Flower),

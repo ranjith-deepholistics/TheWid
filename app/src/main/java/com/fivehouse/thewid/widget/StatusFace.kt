@@ -1,12 +1,15 @@
 package com.fivehouse.thewid.widget
 
+import android.graphics.Bitmap
 import androidx.annotation.StringRes
 import com.fivehouse.thewid.R
 import com.fivehouse.thewid.data.status.AlarmStatus
+import com.fivehouse.thewid.data.status.AlertsStatus
 import com.fivehouse.thewid.data.status.BatteryStatus
 import com.fivehouse.thewid.data.status.CellularNetwork
 import com.fivehouse.thewid.data.status.CellularStatus
 import com.fivehouse.thewid.data.status.MAX_SIGNAL_BARS
+import com.fivehouse.thewid.data.status.NowPlayingStatus
 import com.fivehouse.thewid.data.status.SoundStatus
 import com.fivehouse.thewid.data.status.TimeStatus
 import com.fivehouse.thewid.data.status.WifiStatus
@@ -39,7 +42,11 @@ data class StatusFace(
     val surface: ShapeSurface = ShapeSurface.Glossy,
     val tint: GlossTint = WidgetTint,
     val clock: ClockMarks? = null,
-    val isLive: Boolean = false
+    val isLive: Boolean = false,
+    val valueInside: Boolean = false,
+    val needsAccess: Boolean = false,
+    val caption: String? = null,
+    val art: Bitmap? = null
 )
 
 fun BatteryStatus.toFace(shape: ShapeCatalog = ShapeCatalog.SoftBurst, glow: Boolean = true): StatusFace {
@@ -107,5 +114,39 @@ fun TimeStatus.toFace(): StatusFace {
             hourDegrees = (dateTime.hour % 12 + minute / 60f) * 30f,
             minuteDegrees = minute * 6f
         )
+    )
+}
+
+fun AlertsStatus.toFace(): StatusFace = when (this) {
+    AlertsStatus.NoAccess -> StatusFace(
+        ShapeCatalog.Clover4Leaf,
+        FaceValue.Literal(NO_VALUE),
+        surface = ShapeSurface.Dashed,
+        needsAccess = true
+    )
+
+    is AlertsStatus.Count -> StatusFace(ShapeCatalog.Clover4Leaf, FaceValue.Literal("$count"), valueInside = true)
+}
+
+fun NowPlayingStatus.toFace(): StatusFace = when (this) {
+    NowPlayingStatus.NoAccess -> StatusFace(
+        ShapeCatalog.Cookie12Sided,
+        FaceValue.Literal(NO_VALUE),
+        surface = ShapeSurface.Dashed,
+        needsAccess = true
+    )
+
+    NowPlayingStatus.Nothing -> StatusFace(
+        ShapeCatalog.Cookie12Sided,
+        FaceValue.Literal(NO_VALUE),
+        surface = ShapeSurface.Dashed
+    )
+
+    is NowPlayingStatus.Track -> StatusFace(
+        shape = if (isPlaying) ShapeCatalog.Cookie12Sided else ShapeCatalog.Square,
+        value = FaceValue.Resource(if (isPlaying) R.string.widget_value_playing else R.string.widget_value_paused),
+        isLive = isPlaying,
+        caption = title,
+        art = art
     )
 }

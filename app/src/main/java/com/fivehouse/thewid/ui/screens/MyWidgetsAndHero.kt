@@ -254,6 +254,7 @@ private fun BoxScope.DashedShape(shape: ShapeCatalog, alignment: Alignment) {
 /** Screen 13. */
 @Composable
 fun HeroPickerScreen(
+    options: List<StatusWidgetKind>,
     selected: StatusWidgetKind,
     faces: Map<StatusWidgetKind, StatusFace>,
     onSelect: (StatusWidgetKind) -> Unit,
@@ -286,7 +287,7 @@ fun HeroPickerScreen(
                 .selectableGroup(),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            StatusWidgetKind.entries.chunked(2).forEach { row ->
+            options.chunked(2).forEach { row ->
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     row.forEach { kind ->
                         HeroOption(kind, faces[kind], kind == selected, { onSelect(kind) }, Modifier.weight(1f))
@@ -362,6 +363,6 @@ private fun MyWidgetsEmptyPreview() {
 @Composable
 private fun HeroPickerPreview() {
     ScreenPreview(Atmosphere.CoolMist) {
-        HeroPickerScreen(StatusWidgetKind.Time, PreviewFacesMap, {}, {}, {})
+        HeroPickerScreen(StatusWidgetKind.entries, StatusWidgetKind.Time, PreviewFacesMap, {}, {}, {})
     }
 }

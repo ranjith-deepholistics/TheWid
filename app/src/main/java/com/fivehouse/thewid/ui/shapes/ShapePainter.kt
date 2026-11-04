@@ -1,5 +1,7 @@
 package com.fivehouse.thewid.ui.shapes
 
+import android.graphics.Bitmap
+import android.graphics.BitmapShader
 import android.graphics.Canvas
 import android.graphics.DashPathEffect
 import android.graphics.Matrix
@@ -24,7 +26,8 @@ internal data class ShapePaintSpec(
     val surface: ShapeSurface,
     val tint: GlossTint,
     val outlineColor: Color,
-    val castShadow: Boolean
+    val castShadow: Boolean,
+    val art: Bitmap? = null
 )
 
 /** The y a level's fill reaches: fills rise from [bottom] towards [top]. */
@@ -131,7 +134,31 @@ internal class ShapePainter(private val density: Float) {
         )
     }
 
+    /** Fills the shape with [art], centre-cropped, in place of the glossy gradient. */
+    private fun drawArt(canvas: Canvas, art: Bitmap) {
+        val scale = maxOf(bounds.width() / art.width, bounds.height() / art.height)
+        val shader = BitmapShader(art, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
+        matrix.setScale(scale, scale)
+        matrix.postTranslate(
+            bounds.centerX() - art.width * scale / 2,
+            bounds.centerY() - art.height * scale / 2
+        )
+        shader.setLocalMatrix(matrix)
+        fillPaint.alpha = OPAQUE
+        fillPaint.shader = shader
+        canvas.drawPath(devicePath, fillPaint)
+        fillPaint.shader = null
+        strokePaint.pathEffect = null
+        strokePaint.strokeWidth = RIM_WIDTH_DP * density
+        strokePaint.color = RIM.toArgb()
+        canvas.drawPath(devicePath, strokePaint)
+    }
+
     private fun drawGlossy(canvas: Canvas, spec: ShapePaintSpec) {
+        if (spec.art != null) {
+            drawArt(canvas, spec.art)
+            return
+        }
         if (spec.fill < 1f) {
             fillPaint.shader = null
             fillPaint.color = EMPTY_WELL.toArgb()

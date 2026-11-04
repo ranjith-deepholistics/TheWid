@@ -1,5 +1,6 @@
 package com.fivehouse.thewid.ui.shapes
 
+import android.graphics.Bitmap
 import android.graphics.Path
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
@@ -49,6 +50,7 @@ import com.fivehouse.thewid.ui.theme.ShapesTheme
  * @param fill level from 0 to 1, clipped from the bottom. Only applies to [ShapeSurface.Glossy].
  * @param castShadow reserves the bottom of the box for a soft shadow. For hero shapes.
  * @param clock draws the Time face's hand and minute dot over the shape.
+ * @param art fills the shape instead of the gloss, such as album art.
  * @param content drawn centred over the shape, such as the number inside Alerts.
  */
 @Composable
@@ -61,6 +63,7 @@ fun GlossyShape(
     tint: GlossTint = ShapesTheme.atmosphere.gloss,
     castShadow: Boolean = false,
     clock: ClockMarks? = null,
+    art: Bitmap? = null,
     content: @Composable BoxScope.() -> Unit = {}
 ) {
     val morphState = remember { ShapeMorphState(shape) }
@@ -91,7 +94,7 @@ fun GlossyShape(
                         unitPath = unitPath,
                         width = size.width,
                         height = size.height,
-                        spec = ShapePaintSpec(animatedFill, surface, tint, outlineColor, castShadow)
+                        spec = ShapePaintSpec(animatedFill, surface, tint, outlineColor, castShadow, art)
                     )
                     if (clock != null) painter.drawClock(canvas.nativeCanvas, minOf(size.width, size.height), clock)
                 }

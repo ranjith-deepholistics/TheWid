@@ -4,8 +4,10 @@ import android.content.Context
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import com.fivehouse.thewid.data.status.AlarmRepository
+import com.fivehouse.thewid.data.status.AlertsRepository
 import com.fivehouse.thewid.data.status.BatteryRepository
 import com.fivehouse.thewid.data.status.CellularRepository
+import com.fivehouse.thewid.data.status.NowPlayingRepository
 import com.fivehouse.thewid.data.status.SoundRepository
 import com.fivehouse.thewid.data.status.TimeRepository
 import com.fivehouse.thewid.data.status.WifiRepository
@@ -56,6 +58,18 @@ class AndroidStatusSourcesTest {
     @Test
     fun alarmDelivers() {
         assertNotNull(AlarmRepository(AndroidAlarmSource(context)).status.firstValue())
+    }
+
+    @Test
+    fun alertsDeliversWithOrWithoutAccess() {
+        NotificationAccess.refresh(context)
+        assertNotNull(AlertsRepository(AndroidAlertsSource()).status.firstValue())
+    }
+
+    @Test
+    fun nowPlayingDeliversWithOrWithoutAccess() {
+        NotificationAccess.refresh(context)
+        assertNotNull(NowPlayingRepository(AndroidNowPlayingSource(context)).status.firstValue())
     }
 
     @Test

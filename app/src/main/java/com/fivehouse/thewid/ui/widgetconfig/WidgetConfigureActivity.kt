@@ -244,7 +244,8 @@ private fun FaceImage(face: StatusFace, modifier: Modifier = Modifier) {
             tint = face.tint,
             fill = face.fill,
             surface = face.surface,
-            clock = face.clock
+            clock = face.clock,
+            art = face.art
         ).asImageBitmap()
     }
     Image(bitmap, contentDescription = null, modifier = modifier)

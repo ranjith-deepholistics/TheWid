@@ -3,6 +3,7 @@ package com.fivehouse.thewid
 import android.app.Application
 import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
+import com.fivehouse.thewid.data.status.platform.NotificationAccess
 import com.fivehouse.thewid.widget.WidgetRefresh
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
@@ -19,6 +20,7 @@ class ShapesApplication :
 
     override fun onCreate() {
         super.onCreate()
+        NotificationAccess.refresh(this)
         WidgetRefresh.schedulePeriodic(this)
         WidgetRefresh.listenForChanges(this)
     }

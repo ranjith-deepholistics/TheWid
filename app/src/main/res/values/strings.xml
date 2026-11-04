@@ -13,7 +13,12 @@
     <string name="widget_sound_description">Ring, vibrate or silent as a shape</string>
     <string name="widget_alarm_description">Your next alarm as a sunrise</string>
     <string name="widget_time_description">The time as a sun by day and a cookie by night</string>
-    <string name="widget_live">Charging</string>
+    <string name="widget_alerts_description">How many notifications are waiting. It only counts them.</string>
+    <string name="widget_now_playing_description">The track playing now, squared off when paused</string>
+    <string name="widget_live">Live</string>
+    <string name="widget_needs_access">Needs notification access</string>
+    <string name="widget_value_playing">PLAY</string>
+    <string name="widget_value_paused">PAUSE</string>
     <string name="widget_value_off">OFF</string>
     <string name="widget_value_on">ON</string>
     <string name="widget_value_ring">RING</string>
@@ -92,6 +97,7 @@
     <string name="customize_shape_named">SHAPE · %1$s</string>
     <string name="customize_glow">Glow while charging</string>
     <string name="customize_no_permission">No permission needed</string>
+    <string name="customize_uses_notification_access">Uses notification access</string>
     <string name="customize_add">Add to home screen</string>
     <string name="customize_size_hint">Your launcher sets the first size. Long-press to resize.</string>
     <string name="size_1x1">1×1</string>
@@ -140,6 +146,36 @@
     <string name="search_recent">RECENT</string>
     <string name="search_no_results">Nothing matches that. Try a widget name.</string>
     <string name="search_result_subtitle">%1$s · %2$s</string>
+
+    <string name="permission_alerts_title">Let %1$s count\nyour alerts</string>
+    <string name="permission_alerts_body">It only counts them. It never reads, saves or sends what they say.</string>
+    <string name="permission_alerts_chip_scope">Counts only</string>
+    <string name="permission_alerts_chip_also">Also unlocks Now playing</string>
+    <string name="permission_now_playing_title">Let %1$s see\nwhat\'s playing</string>
+    <string name="permission_now_playing_body">It only shows the track and its art on your widget. Nothing is saved or sent.</string>
+    <string name="permission_now_playing_chip_scope">Track and art only</string>
+    <string name="permission_now_playing_chip_also">Also unlocks Alerts</string>
+    <string name="permission_chip_local">Stays on this phone</string>
+    <string name="permission_open_settings">Open settings</string>
+    <string name="permission_not_now">Not now</string>
+    <string name="permission_denied_title">%1$s is still off</string>
+    <string name="permission_alerts_denied_body">Without access this widget can\'t count. Here\'s how to switch it on:</string>
+    <string name="permission_now_playing_denied_body">Without access this widget can\'t see what\'s playing. Here\'s how to switch it on:</string>
+    <string name="permission_step1">Open Notification access</string>
+    <string name="permission_step2">Find %1$s in the list</string>
+    <string name="permission_step3">Switch it on, then come back</string>
+    <string name="permission_open_again">Open settings again</string>
+    <string name="permission_choose_another">Choose another widget</string>
+    <string name="permission_granted_title">%1$s is live</string>
+    <plurals name="permission_alerts_counting">
+        <item quantity="one">Counting %1$d new right now</item>
+        <item quantity="other">Counting %1$d new right now</item>
+    </plurals>
+    <string name="permission_alerts_starting">Starting to count</string>
+    <string name="permission_now_playing_ready">Ready when something plays</string>
+    <string name="permission_alerts_granted_also">Now playing is unlocked too.</string>
+    <string name="permission_now_playing_granted_also">Alerts is unlocked too.</string>
+    <string name="permission_customize_first">Customize first</string>
 
     <string name="settings_title">Settings</string>
     <string name="settings_access">ACCESS</string>
