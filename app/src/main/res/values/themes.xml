@@ -2,4 +2,10 @@
 <resources>
 
     <style name="Theme.TheWid" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <!-- The configure sheet sits over the launcher. -->
+    <style name="Theme.TheWid.ConfigureSheet">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+    </style>
 </resources>

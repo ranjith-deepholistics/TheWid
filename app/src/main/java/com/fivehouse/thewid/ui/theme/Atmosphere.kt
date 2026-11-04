@@ -15,6 +15,9 @@ data class GlossTint(val light: Color, val deep: Color) {
                 light = lerp(com.fivehouse.thewid.ui.theme.Accent, Color.White, 0.5f),
                 deep = com.fivehouse.thewid.ui.theme.Accent
             )
+
+        /** The gold of the Time widget's day shape. Sampled from mockup 17; the spec has no token for it. */
+        val Sun = GlossTint(light = Color(0xFFFFF1C9), deep = Color(0xFFEFC45D))
     }
 }
 

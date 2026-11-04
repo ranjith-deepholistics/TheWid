@@ -1,6 +1,34 @@
 <resources>
     <string name="app_name">TheWid</string>
 
+    <string name="widget_battery">Battery</string>
+    <string name="widget_cellular">Cellular</string>
+    <string name="widget_wifi">Wi-Fi</string>
+    <string name="widget_sound">Sound</string>
+    <string name="widget_alarm">Alarm</string>
+    <string name="widget_time">Time</string>
+    <string name="widget_battery_description">Battery level as a shape that fills up</string>
+    <string name="widget_cellular_description">Signal bars and network as a shape</string>
+    <string name="widget_wifi_description">Wi-Fi strength as a shape, dashed when off</string>
+    <string name="widget_sound_description">Ring, vibrate or silent as a shape</string>
+    <string name="widget_alarm_description">Your next alarm as a sunrise</string>
+    <string name="widget_time_description">The time as a sun by day and a cookie by night</string>
+    <string name="widget_live">Charging</string>
+    <string name="widget_value_off">OFF</string>
+    <string name="widget_value_on">ON</string>
+    <string name="widget_value_ring">RING</string>
+    <string name="widget_value_vibrate">VIBE</string>
+    <string name="widget_value_mute">MUTE</string>
+
+    <string name="configure_eyebrow">NEW WIDGET</string>
+    <string name="configure_title">Set up %1$s</string>
+    <string name="configure_shape">SHAPE</string>
+    <string name="configure_hint">Resize it on your home screen any time.</string>
+    <string name="configure_done">Done</string>
+
+    <string name="catalog_widgets">Status widgets</string>
+    <string name="catalog_pin_unsupported">This launcher can\'t add widgets from an app. Add them from its widget picker.</string>
+
     <string name="catalog_title">Foundation</string>
     <string name="catalog_type">Type: Doto and Roboto Flex</string>
     <string name="catalog_flex_weight">Roboto Flex %1$d</string>

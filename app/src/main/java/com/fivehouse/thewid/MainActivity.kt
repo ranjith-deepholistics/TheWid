@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import com.fivehouse.thewid.ui.catalog.FoundationCatalogRoute
+import com.fivehouse.thewid.widget.WidgetRefresh
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -13,5 +14,10 @@ class MainActivity : ComponentActivity() {
         setContent {
             FoundationCatalogRoute()
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        WidgetRefresh.refreshNow(this)
     }
 }

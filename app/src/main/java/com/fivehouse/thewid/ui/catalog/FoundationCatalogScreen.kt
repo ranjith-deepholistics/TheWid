@@ -34,6 +34,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -56,6 +57,8 @@ import com.fivehouse.thewid.ui.theme.Atmosphere
 import com.fivehouse.thewid.ui.theme.GlossTint
 import com.fivehouse.thewid.ui.theme.Numerals
 import com.fivehouse.thewid.ui.theme.ShapesTheme
+import com.fivehouse.thewid.widget.StatusWidgetKind
+import com.fivehouse.thewid.widget.WidgetPinning
 
 private const val GRID_COLUMNS = 4
 private val SpikeProgression = listOf(ShapeCatalog.Clover4Leaf, ShapeCatalog.Burst, ShapeCatalog.Boom)
@@ -65,6 +68,7 @@ fun FoundationCatalogRoute(modifier: Modifier = Modifier) {
     var atmosphere by rememberSaveable { mutableStateOf(Atmosphere.CoolMist) }
     var fill by rememberSaveable { mutableFloatStateOf(0.68f) }
     var morphed by rememberSaveable { mutableStateOf(false) }
+    val context = LocalContext.current
 
     ShapesTheme(atmosphere) {
         FoundationCatalogScreen(
@@ -73,6 +77,8 @@ fun FoundationCatalogRoute(modifier: Modifier = Modifier) {
             onAtmosphereChange = { atmosphere = it },
             onFillChange = { fill = it },
             onMorphClick = { morphed = !morphed },
+            canPinWidgets = remember(context) { WidgetPinning.isSupported(context) },
+            onPinWidget = { WidgetPinning.request(context, it) },
             modifier = modifier
         )
     }
@@ -86,6 +92,8 @@ fun FoundationCatalogScreen(
     onAtmosphereChange: (Atmosphere) -> Unit,
     onFillChange: (Float) -> Unit,
     onMorphClick: () -> Unit,
+    canPinWidgets: Boolean,
+    onPinWidget: (StatusWidgetKind) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val glass = rememberFrostedGlassState()
@@ -102,6 +110,7 @@ fun FoundationCatalogScreen(
                 )
             }
             item(key = "atmospheres") { AtmospherePicker(onAtmosphereChange) }
+            section("widgets", R.string.catalog_widgets) { WidgetPins(canPinWidgets, onPinWidget) }
             section("type", R.string.catalog_type) { TypeSpecimen() }
             section("fill", R.string.catalog_rule_fill) { FillRule(fill, onFillChange) }
             section("outline", R.string.catalog_rule_outline) { OutlineRule() }
@@ -151,6 +160,26 @@ private fun AtmospherePicker(onAtmosphereChange: (Atmosphere) -> Unit, modifier:
                 onClick = { onAtmosphereChange(atmosphere) },
                 label = { Text(atmosphere.name) }
             )
+        }
+    }
+}
+
+/** A way to add widgets until the app shell's Customize screen exists in Phase 4. */
+@Composable
+private fun WidgetPins(canPin: Boolean, onPin: (StatusWidgetKind) -> Unit, modifier: Modifier = Modifier) {
+    if (!canPin) {
+        Text(stringResource(R.string.catalog_pin_unsupported), modifier, style = MaterialTheme.typography.bodyMedium)
+        return
+    }
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        StatusWidgetKind.entries.chunked(2).forEach { row ->
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                row.forEach { kind ->
+                    Button(onClick = { onPin(kind) }, modifier = Modifier.weight(1f)) {
+                        Text(stringResource(kind.label))
+                    }
+                }
+            }
         }
     }
 }
@@ -311,7 +340,9 @@ private fun FoundationCatalogScreenPreview(@PreviewParameter(AtmosphereProvider:
             morphed = false,
             onAtmosphereChange = {},
             onFillChange = {},
-            onMorphClick = {}
+            onMorphClick = {},
+            canPinWidgets = true,
+            onPinWidget = {}
         )
     }
 }

@@ -70,6 +70,33 @@ internal class ShapePainter(private val density: Float) {
         }
     }
 
+    /**
+     * Draws a small solid shape around the box's centre, such as a clock hand.
+     *
+     * @param degrees clockwise from 12, turning the mark with it.
+     * @param markScale the mark's size as a share of [boxSize].
+     * @param orbit how far the mark's centre sits from the box's centre, as a share of [boxSize].
+     */
+    fun drawMark(
+        canvas: Canvas,
+        unitPath: Path,
+        boxSize: Float,
+        degrees: Float,
+        markScale: Float,
+        orbit: Float,
+        color: Int
+    ) {
+        val mark = boxSize * markScale
+        val center = boxSize / 2
+        matrix.setScale(mark, mark)
+        matrix.postTranslate(center - mark / 2, center - mark / 2 - boxSize * orbit)
+        matrix.postRotate(degrees, center, center)
+        unitPath.transform(matrix, devicePath)
+        fillPaint.shader = null
+        fillPaint.color = color
+        canvas.drawPath(devicePath, fillPaint)
+    }
+
     private fun drawGlossy(canvas: Canvas, spec: ShapePaintSpec) {
         if (spec.fill < 1f) {
             fillPaint.shader = null

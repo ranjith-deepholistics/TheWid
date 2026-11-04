@@ -23,6 +23,7 @@ Product spec, design tokens and build phases: @SHAPES_BUILD_SPEC.md
 - Configuration cache is on, so custom build logic must be compatible with it.
 - Dependency versions live in `gradle/libs.versions.toml`.
 - `material3` is pinned to a 1.5 pre-release above the Compose BOM, because `MaterialShapes` isn't public in 1.4.0.
+- Hilt stays on 2.59.x while the project is on Kotlin 2.2; 2.60.1 is built on Kotlin 2.3.
 - Haze stays on 1.x until the project moves to Kotlin 2.4, which Haze 2.x requires.
 
 ## Architecture decisions
@@ -30,5 +31,6 @@ Product spec, design tokens and build phases: @SHAPES_BUILD_SPEC.md
 - All shape drawing goes through `ShapePainter`. `GlossyShape` and `ShapeBitmapRenderer` share it so widgets match the app, so don't add a second drawing path.
 - Get shapes from `ShapeCatalog`, never from hand-drawn paths.
 - Only `FrostedGlass.kt` may import Haze.
+- Glance can't set custom fonts or draw polygons: shapes and Doto values go through bitmaps, and the Time digits use a `TextClock` layout so they stay current between updates. Don't pass `SizeMode.Responsive`, which risks the roughly 1 MB limit on widget updates.
 - Paint alpha multiplies a shader. Reset it before setting a shader on a reused `Paint`.
 - Dark atmospheres use a dimmer glass tile than the spec's values (8% fill, 20% border), following the Moss mockups. Light atmospheres use the spec's values.
