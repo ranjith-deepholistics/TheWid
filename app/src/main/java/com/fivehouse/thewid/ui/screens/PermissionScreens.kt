@@ -32,6 +32,7 @@ import androidx.compose.ui.unit.dp
 import com.fivehouse.thewid.R
 import com.fivehouse.thewid.data.status.AlertsStatus
 import com.fivehouse.thewid.ui.components.BackButton
+import com.fivehouse.thewid.ui.components.BurstHalo
 import com.fivehouse.thewid.ui.components.FaceShape
 import com.fivehouse.thewid.ui.components.GlassTile
 import com.fivehouse.thewid.ui.components.InfoChip
@@ -42,7 +43,6 @@ import com.fivehouse.thewid.ui.shapes.GlossyShape
 import com.fivehouse.thewid.ui.shapes.ShapeCatalog
 import com.fivehouse.thewid.ui.shapes.ShapeSurface
 import com.fivehouse.thewid.ui.theme.Atmosphere
-import com.fivehouse.thewid.ui.theme.GlossTint
 import com.fivehouse.thewid.ui.theme.Numerals
 import com.fivehouse.thewid.widget.FaceValue
 import com.fivehouse.thewid.widget.StatusFace
@@ -88,12 +88,12 @@ fun PermissionScreen(
         }
         when (stage) {
             PermissionStage.Ask -> {
-                PrimaryPill(stringResource(R.string.permission_open_settings), onOpenSettings)
+                PrimaryPill(stringResource(R.string.permission_open_settings), onOpenSettings, showDot = true)
                 TextButton(onClick = onBack) { Text(stringResource(R.string.permission_not_now)) }
             }
 
             PermissionStage.Denied -> {
-                PrimaryPill(stringResource(R.string.permission_open_again), onOpenSettings)
+                PrimaryPill(stringResource(R.string.permission_open_again), onOpenSettings, showDot = true)
                 TextButton(onClick = onBack) { Text(stringResource(R.string.permission_choose_another)) }
             }
 
@@ -230,7 +230,7 @@ private fun GrantedContent(kind: StatusWidgetKind, label: String, face: StatusFa
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Box(Modifier.size(260.dp), contentAlignment = Alignment.Center) {
-            GlossyShape(ShapeCatalog.Burst, null, Modifier.size(260.dp), tint = GlossTint.Accent, fill = 0.25f)
+            BurstHalo(Modifier.size(260.dp))
             if (face != null && !face.needsAccess && face.surface == ShapeSurface.Glossy) {
                 FaceShape(face, null, Modifier.size(170.dp)) {
                     if (count != null) Text("$count", style = Numerals.Large)

@@ -19,6 +19,7 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -30,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -59,7 +61,6 @@ import com.fivehouse.thewid.widget.WidgetTint
 import com.fivehouse.thewid.widget.toFace
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
 
 enum class PreviewSize(val label: Int) {
     One(R.string.size_1x1),
@@ -112,7 +113,7 @@ fun CustomizeScreen(
                 ShapeOptions(kind.shapeOptions, shape, onShapeChange)
             }
             Text(
-                stringResource(R.string.customize_atmosphere_named, atmosphere.name.uppercase()),
+                stringResource(R.string.customize_atmosphere_named, atmosphere.displayName().uppercase()),
                 style = MaterialTheme.typography.labelSmall
             )
             AtmosphereSwatches(Atmosphere.entries, atmosphere, { if (it != null) onAtmosphereChange(it) })
@@ -154,9 +155,12 @@ fun CustomizeScreen(
         if (onSecondary != null && secondaryLabel != null) {
             TextButton(onClick = onSecondary, modifier = Modifier.fillMaxWidth()) { Text(secondaryLabel) }
         }
-        PrimaryPill(stringResource(R.string.customize_add), onAdd)
+        PrimaryPill(stringResource(R.string.customize_add), onAdd, showDot = true)
     }
 }
+
+/** "CoolMist" as "Cool Mist". */
+private fun Atmosphere.displayName() = name.replace(Regex("(?<=[a-z])(?=[A-Z])"), " ")
 
 private fun StatusFace.inAtmosphere(atmosphere: Atmosphere) =
     if (tint == WidgetTint) copy(tint = atmosphere.gloss) else this
@@ -233,8 +237,10 @@ fun AddedScreen(
     heroFace: StatusFace?,
     onMakeHero: () -> Unit,
     onDone: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    today: LocalDate = LocalDate.now()
 ) {
+    val locale = LocalConfiguration.current.locales[0]
     Box(modifier.fillMaxSize()) {
         Column(
             Modifier
@@ -243,7 +249,7 @@ fun AddedScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                LocalDate.now().format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG)),
+                today.format(DateTimeFormatter.ofPattern("EEEE, d MMMM", locale)),
                 style = MaterialTheme.typography.bodySmall
             )
             Text(stringResource(R.string.added_title), style = MaterialTheme.typography.headlineLarge)
@@ -332,7 +338,13 @@ private fun AddedSnack(isHero: Boolean, onMakeHero: () -> Unit, modifier: Modifi
             )
         }
         if (!isHero) {
-            FilledTonalButton(onClick = onMakeHero) { Text(stringResource(R.string.added_make_hero)) }
+            FilledTonalButton(
+                onClick = onMakeHero,
+                colors = ButtonDefaults.filledTonalButtonColors(
+                    containerColor = Color.White.copy(alpha = 0.16f),
+                    contentColor = Color.White
+                )
+            ) { Text(stringResource(R.string.added_make_hero)) }
         }
     }
 }

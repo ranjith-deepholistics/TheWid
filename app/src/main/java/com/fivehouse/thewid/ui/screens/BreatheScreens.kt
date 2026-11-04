@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -53,6 +54,7 @@ import com.fivehouse.thewid.ui.components.PrimaryPill
 import com.fivehouse.thewid.ui.components.ScreenPreview
 import com.fivehouse.thewid.ui.shapes.GlossyShape
 import com.fivehouse.thewid.ui.shapes.ShapeCatalog
+import com.fivehouse.thewid.ui.shapes.ShapeSurface
 import com.fivehouse.thewid.ui.theme.Accent
 import com.fivehouse.thewid.ui.theme.Atmosphere
 import com.fivehouse.thewid.ui.theme.Numerals
@@ -212,8 +214,19 @@ fun BreatheCompleteScreen(
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         Spacer(Modifier.height(24.dp))
-        GlossyShape(ShapeCatalog.SoftBurst, null, Modifier.size(200.dp), castShadow = true) {
-            Icon(painterResource(R.drawable.ic_check), null, Modifier.size(64.dp))
+        // The flower settles into a soft burst, its outline left behind.
+        Box(contentAlignment = Alignment.Center) {
+            GlossyShape(
+                ShapeCatalog.Flower,
+                null,
+                Modifier
+                    .size(250.dp)
+                    .graphicsLayer { alpha = 0.3f },
+                surface = ShapeSurface.Outline
+            )
+            GlossyShape(ShapeCatalog.SoftBurst, null, Modifier.size(180.dp), castShadow = true) {
+                Icon(painterResource(R.drawable.ic_check), null, Modifier.size(56.dp))
+            }
         }
         Text(stringResource(R.string.breathe_done_title), style = MaterialTheme.typography.headlineLarge)
         if (heartPulseOn) {

@@ -8,19 +8,25 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -39,11 +46,14 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.fivehouse.thewid.R
 import com.fivehouse.thewid.ui.shapes.GlossyShape
+import com.fivehouse.thewid.ui.shapes.ShapeCatalog
 import com.fivehouse.thewid.ui.theme.Accent
 import com.fivehouse.thewid.ui.theme.Atmosphere
+import com.fivehouse.thewid.ui.theme.GlossTint
 import com.fivehouse.thewid.ui.theme.Numerals
 import com.fivehouse.thewid.ui.theme.ShapesTheme
 import com.fivehouse.thewid.widget.StatusFace
+import com.fivehouse.thewid.widget.WidgetTint
 import com.fivehouse.thewid.widget.resolve
 import kotlin.math.PI
 import kotlin.math.cos
@@ -79,7 +89,13 @@ fun Eyebrow(text: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun PrimaryPill(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) {
+fun PrimaryPill(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    showDot: Boolean = false
+) {
     Button(
         onClick = onClick,
         enabled = enabled,
@@ -87,6 +103,10 @@ fun PrimaryPill(text: String, onClick: () -> Unit, modifier: Modifier = Modifier
             .fillMaxWidth()
             .height(56.dp)
     ) {
+        if (showDot) {
+            LiveDot()
+            Spacer(Modifier.width(8.dp))
+        }
         Text(text)
     }
 }
@@ -138,7 +158,8 @@ fun FaceShape(
         modifier = modifier,
         fill = face.fill,
         surface = face.surface,
-        tint = face.tint,
+        // Faces with no colour of their own take the screen's, as the mockups' shapes do.
+        tint = if (face.tint == WidgetTint) ShapesTheme.atmosphere.gloss else face.tint,
         castShadow = castShadow,
         clock = face.clock,
         art = face.art,
@@ -150,6 +171,65 @@ fun FaceShape(
 @Composable
 fun FaceValueText(face: StatusFace, modifier: Modifier = Modifier, style: TextStyle = Numerals.Medium) {
     Text(face.value.resolve(LocalContext.current), modifier, style = style)
+}
+
+/** A soft burst of accent behind a hero shape, for moments that are alive or just unlocked. */
+@Composable
+fun BurstHalo(modifier: Modifier = Modifier) {
+    GlossyShape(
+        ShapeCatalog.Burst,
+        null,
+        modifier.graphicsLayer { alpha = 0.3f },
+        tint = GlossTint.Accent
+    )
+}
+
+/** A small tappable shape and name, such as a suggestion or a recent search. */
+@Composable
+fun ShapeChip(face: StatusFace?, label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val isDark = ShapesTheme.atmosphere.isDark
+    Surface(
+        onClick = onClick,
+        modifier = modifier.heightIn(min = 48.dp),
+        shape = CircleShape,
+        color = Color.White.copy(alpha = if (isDark) 0.12f else 0.7f),
+        contentColor = LocalContentColor.current
+    ) {
+        Row(
+            Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            if (face != null) FaceShape(face, null, Modifier.size(24.dp))
+            Text(label, style = MaterialTheme.typography.labelLarge)
+        }
+    }
+}
+
+/** The app's text field: soft and rounded, so it sits with the glass tiles. */
+@Composable
+fun ShapesTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+    placeholder: String? = null,
+    label: String? = null
+) {
+    val fill = Color.White.copy(alpha = if (ShapesTheme.atmosphere.isDark) 0.12f else 0.6f)
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        modifier = modifier,
+        singleLine = true,
+        shape = RoundedCornerShape(20.dp),
+        label = label?.let { { Text(it) } },
+        placeholder = placeholder?.let { { Text(it) } },
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedContainerColor = fill,
+            unfocusedContainerColor = fill,
+            unfocusedBorderColor = Color.Transparent
+        )
+    )
 }
 
 /** One choice from a few, as a pill-shaped track. */

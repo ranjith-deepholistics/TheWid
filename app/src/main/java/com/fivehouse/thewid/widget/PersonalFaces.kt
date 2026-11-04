@@ -137,7 +137,7 @@ fun BreatheLog.toFace(today: LocalDate): StatusFace = StatusFace(
 )
 
 fun FocusState.toFace(nowMs: Long): StatusFace = StatusFace(
-    shape = if (onBreak) ShapeCatalog.Circle else ShapeCatalog.VerySunny,
+    shape = if (onBreak) ShapeCatalog.Circle else ShapeCatalog.Sunny,
     value = FaceValue.Countdown(remainingAt(nowMs), isRunning),
     tint = Atmosphere.DuskBloom.gloss,
     isLive = isRunning,

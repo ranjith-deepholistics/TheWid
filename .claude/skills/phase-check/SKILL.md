@@ -5,13 +5,14 @@ description: Verify a build phase from SHAPES_BUILD_SPEC.md before stopping for 
 
 Check the current phase and report what is and isn't verified. Never start an emulator.
 
-1. Run `./gradlew :app:assembleDebug :app:assembleDebugAndroidTest :app:testDebugUnitTest :app:lintDebug :app:ktlintCheck --console=plain`.
+1. Run `./gradlew :app:assembleDebug :app:assembleDebugAndroidTest :app:testDebugUnitTest :app:lintDebug :app:ktlintCheck :app:validateDebugScreenshotTest --console=plain`.
+   For intended UI changes, run `:app:updateDebugScreenshotTest` first, then view the changed PNGs in `app/src/screenshotTestDebug/reference/` against their mockups.
 2. Read the results:
    - Unit tests: `app/build/test-results/testDebugUnitTest/*.xml`
    - Lint: `app/build/reports/lint-results-debug.xml`. Errors fail the phase. List warnings in code changed by this phase.
 3. Go through section 7 of `SHAPES_BUILD_SPEC.md` for this phase:
    - Previews exist for every screen state added. Search the changed files for `@Preview`.
-   - Mockups: read the PNGs in `design/Shapes-V1/` for this phase and say which ones you compared and how.
+   - Mockups: compare the rendered screenshots with the PNGs in `design/Shapes-V1/` and say which you compared and how. Glance widgets don't render here, so say they remain unseen.
    - No permission is requested before the user taps a widget that needs it. Search for permission requests in the changed code.
 4. Write the summary:
    - What was built.

@@ -58,6 +58,7 @@ import com.fivehouse.thewid.ui.components.GlassTile
 import com.fivehouse.thewid.ui.components.InfoChip
 import com.fivehouse.thewid.ui.components.PrimaryPill
 import com.fivehouse.thewid.ui.components.ScreenPreview
+import com.fivehouse.thewid.ui.components.ShapeChip
 import com.fivehouse.thewid.ui.shapes.GlossyShape
 import com.fivehouse.thewid.ui.shapes.ShapeCatalog
 import com.fivehouse.thewid.ui.shapes.ShapeSurface
@@ -81,7 +82,7 @@ fun MyWidgetsScreen(
     modifier: Modifier = Modifier
 ) {
     if (placed.isEmpty()) {
-        EmptyWidgets(onQuickAdd, onAdd, modifier)
+        EmptyWidgets(faces, onQuickAdd, onAdd, modifier)
     } else {
         PlacedList(placed, hero, faces, onEdit, onAdd, modifier)
     }
@@ -157,6 +158,8 @@ private fun PlacedRow(
             scope.launch { swipe.reset() }
         },
         backgroundContent = {
+            // Only while swiping: the glass row above is translucent and would show this through it.
+            if (swipe.dismissDirection != SwipeToDismissBoxValue.EndToStart) return@SwipeToDismissBox
             Box(
                 Modifier
                     .fillMaxSize()
@@ -201,7 +204,12 @@ private val WidgetLayout.sizeLabel: Int
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun EmptyWidgets(onQuickAdd: (StatusWidgetKind) -> Unit, onBrowse: () -> Unit, modifier: Modifier = Modifier) {
+private fun EmptyWidgets(
+    faces: Map<StatusWidgetKind, StatusFace>,
+    onQuickAdd: (StatusWidgetKind) -> Unit,
+    onBrowse: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Column(
         modifier
             .fillMaxSize()
@@ -230,9 +238,9 @@ private fun EmptyWidgets(onQuickAdd: (StatusWidgetKind) -> Unit, onBrowse: () ->
         Spacer(Modifier.height(8.dp))
         Text(stringResource(R.string.empty_body), style = MaterialTheme.typography.bodyMedium)
         Spacer(Modifier.height(12.dp))
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally)) {
             listOf(StatusWidgetKind.Time, StatusWidgetKind.Battery, StatusWidgetKind.Mochi).forEach { kind ->
-                TextButton(onClick = { onQuickAdd(kind) }) { Text(stringResource(kind.label)) }
+                ShapeChip(faces[kind], stringResource(kind.label), { onQuickAdd(kind) })
             }
         }
         Spacer(Modifier.weight(1f))
@@ -247,7 +255,7 @@ private fun BoxScope.DashedShape(shape: ShapeCatalog, alignment: Alignment) {
         null,
         Modifier
             .align(alignment)
-            .size(120.dp),
+            .size(96.dp),
         surface = ShapeSurface.Dashed
     )
 }

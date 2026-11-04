@@ -13,6 +13,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.unit.dp
 
 private val LocalAtmosphere = staticCompositionLocalOf { Atmosphere.CoolMist }
@@ -24,6 +25,7 @@ private val ShapesShapes = Shapes(
 
 private fun colorSchemeFor(atmosphere: Atmosphere): ColorScheme {
     val surface = atmosphere.stops[atmosphere.stops.size / 2]
+    val lightest = atmosphere.stops.maxBy { it.luminance() }
     return if (atmosphere.isDark) {
         darkColorScheme(
             primary = DarkAtmosphereText,
@@ -35,7 +37,20 @@ private fun colorSchemeFor(atmosphere: Atmosphere): ColorScheme {
             surface = surface,
             onSurface = DarkAtmosphereText,
             onSurfaceVariant = DarkAtmosphereText.copy(alpha = 0.72f),
-            outline = DarkAtmosphereText.copy(alpha = 0.72f)
+            outline = DarkAtmosphereText.copy(alpha = 0.72f),
+            secondary = DarkAtmosphereText,
+            onSecondary = Ink,
+            secondaryContainer = Color.White.copy(alpha = 0.14f),
+            onSecondaryContainer = DarkAtmosphereText,
+            primaryContainer = Color.White.copy(alpha = 0.14f),
+            onPrimaryContainer = DarkAtmosphereText,
+            surfaceVariant = Color.White.copy(alpha = 0.14f),
+            outlineVariant = DarkAtmosphereText.copy(alpha = 0.3f),
+            surfaceContainerLowest = atmosphere.stops.first(),
+            surfaceContainerLow = surface,
+            surfaceContainer = surface,
+            surfaceContainerHigh = atmosphere.stops.last(),
+            surfaceContainerHighest = atmosphere.stops.last()
         )
     } else {
         lightColorScheme(
@@ -48,7 +63,20 @@ private fun colorSchemeFor(atmosphere: Atmosphere): ColorScheme {
             surface = surface,
             onSurface = Ink,
             onSurfaceVariant = SecondaryText,
-            outline = SecondaryText
+            outline = SecondaryText,
+            secondary = Ink,
+            onSecondary = Color.White,
+            secondaryContainer = Color.White.copy(alpha = 0.6f),
+            onSecondaryContainer = Ink,
+            primaryContainer = Color.White.copy(alpha = 0.6f),
+            onPrimaryContainer = Ink,
+            surfaceVariant = Color.White.copy(alpha = 0.6f),
+            outlineVariant = SecondaryText.copy(alpha = 0.3f),
+            surfaceContainerLowest = Color.White,
+            surfaceContainerLow = lightest,
+            surfaceContainer = lightest,
+            surfaceContainerHigh = lightest,
+            surfaceContainerHighest = lightest
         )
     }
 }

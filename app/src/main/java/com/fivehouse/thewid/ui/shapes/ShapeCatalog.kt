@@ -3,6 +3,11 @@ package com.fivehouse.thewid.ui.shapes
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.MaterialShapes
 import androidx.graphics.shapes.RoundedPolygon
+import androidx.graphics.shapes.TransformResult
+import kotlin.math.cos
+import kotlin.math.sin
+
+private const val FAN_ROTATION_DEGREES = -45.0
 
 /** Every shape in the M3 Expressive library. Always draw through this, never a hand-made approximation. */
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
@@ -11,7 +16,7 @@ enum class ShapeCatalog(private val source: () -> RoundedPolygon) {
     Square({ MaterialShapes.Square }),
     Slanted({ MaterialShapes.Slanted }),
     Arch({ MaterialShapes.Arch }),
-    Fan({ MaterialShapes.Fan }),
+    Fan({ MaterialShapes.Fan.pointingDown() }),
     Arrow({ MaterialShapes.Arrow }),
     SemiCircle({ MaterialShapes.SemiCircle }),
     Oval({ MaterialShapes.Oval }),
@@ -43,5 +48,17 @@ enum class ShapeCatalog(private val source: () -> RoundedPolygon) {
     Bun({ MaterialShapes.Bun }),
     Heart({ MaterialShapes.Heart });
 
-    val polygon: RoundedPolygon get() = source()
+    val polygon: RoundedPolygon by lazy(source)
+}
+
+/** The library Fan turned so its point faces down, as Wi-Fi strength is drawn in the mockups. */
+private fun RoundedPolygon.pointingDown(): RoundedPolygon {
+    val radians = Math.toRadians(FAN_ROTATION_DEGREES)
+    val cosine = cos(radians).toFloat()
+    val sine = sin(radians).toFloat()
+    return transformed { x, y ->
+        val dx = x - 0.5f
+        val dy = y - 0.5f
+        TransformResult(0.5f + dx * cosine - dy * sine, 0.5f + dx * sine + dy * cosine)
+    }.normalized()
 }

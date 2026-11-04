@@ -25,7 +25,6 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -54,6 +53,7 @@ import com.fivehouse.thewid.ui.components.FaceValueText
 import com.fivehouse.thewid.ui.components.GlassTile
 import com.fivehouse.thewid.ui.components.PrimaryPill
 import com.fivehouse.thewid.ui.components.ScreenPreview
+import com.fivehouse.thewid.ui.components.ShapeChip
 import com.fivehouse.thewid.ui.shapes.GlossyShape
 import com.fivehouse.thewid.ui.shapes.ShapeSurface
 import com.fivehouse.thewid.ui.shell.CatalogWidget
@@ -115,7 +115,7 @@ fun SearchScreen(
         }
         if (recents.isNotEmpty()) {
             Eyebrow(stringResource(R.string.search_recent))
-            Recents(recents, onWidgetClick)
+            Recents(recents, faces, onWidgetClick)
         }
     }
 }
@@ -231,12 +231,13 @@ private fun SettingResult(setting: SearchSetting, query: String, onClick: () -> 
 @Composable
 private fun Recents(
     recents: List<StatusWidgetKind>,
+    faces: Map<StatusWidgetKind, StatusFace>,
     onClick: (StatusWidgetKind) -> Unit,
     modifier: Modifier = Modifier
 ) {
     FlowRow(modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         recents.forEach { kind ->
-            TextButton(onClick = { onClick(kind) }) { Text(stringResource(kind.label)) }
+            ShapeChip(faces[kind], stringResource(kind.label), { onClick(kind) })
         }
     }
 }

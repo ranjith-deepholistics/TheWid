@@ -2,6 +2,7 @@ package com.fivehouse.thewid.ui.shapes
 
 import android.graphics.Bitmap
 import android.graphics.Path
+import android.provider.Settings
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -26,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -68,7 +70,8 @@ fun GlossyShape(
     content: @Composable BoxScope.() -> Unit = {}
 ) {
     val morphState = remember { ShapeMorphState(shape) }
-    LaunchedEffect(shape) { morphState.animateTo(shape) }
+    val reduceMotion = rememberReduceMotion()
+    LaunchedEffect(shape, reduceMotion) { morphState.animateTo(shape, animate = !reduceMotion) }
     val animatedFill by animateFloatAsState(
         targetValue = fill.coerceIn(0f, 1f),
         animationSpec = spring(stiffness = Spring.StiffnessLow),
@@ -114,8 +117,13 @@ private class ShapeMorphState(initial: ShapeCatalog) {
     private var morph by mutableStateOf<Morph?>(null)
     private val progress = Animatable(1f)
 
-    suspend fun animateTo(target: ShapeCatalog) {
+    suspend fun animateTo(target: ShapeCatalog, animate: Boolean) {
         if (target == settled) return
+        if (!animate) {
+            morph = null
+            settled = target
+            return
+        }
         morph = Morph(settled.polygon, target.polygon)
         settled = target
         progress.snapTo(0f)
@@ -177,4 +185,11 @@ private fun GlossyShapeAccentPreview() {
             }
         }
     }
+}
+
+/** True when someone has switched animations off in Android's accessibility settings. */
+@Composable
+fun rememberReduceMotion(): Boolean {
+    val resolver = LocalContext.current.contentResolver
+    return remember(resolver) { Settings.Global.getFloat(resolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f }
 }

@@ -28,7 +28,6 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -72,6 +71,7 @@ import com.fivehouse.thewid.ui.components.GlassTile
 import com.fivehouse.thewid.ui.components.OutlineTile
 import com.fivehouse.thewid.ui.components.PrimaryPill
 import com.fivehouse.thewid.ui.components.ScreenPreview
+import com.fivehouse.thewid.ui.components.ShapesTextField
 import com.fivehouse.thewid.ui.shapes.GlossyShape
 import com.fivehouse.thewid.ui.shapes.ShapeCatalog
 import com.fivehouse.thewid.ui.theme.Atmosphere
@@ -203,11 +203,10 @@ private fun AddEventDialog(onAdd: (WeekEvent) -> Unit, onDismiss: () -> Unit) {
         title = { Text(stringResource(R.string.week_add_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedTextField(
+                ShapesTextField(
                     value = label,
                     onValueChange = { label = it.take(MAX_LABEL_CHARS) },
-                    label = { Text(stringResource(R.string.week_label)) },
-                    singleLine = true
+                    label = stringResource(R.string.week_label)
                 )
                 TextButton(onClick = { pickingDate = true }) { Text(LocalDate.ofEpochDay(epochDay).toString()) }
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -429,12 +428,11 @@ fun DecideSetupScreen(
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             Eyebrow(stringResource(R.string.decide_question))
-            OutlinedTextField(
+            ShapesTextField(
                 value = question,
                 onValueChange = { question = it.take(MAX_LABEL_CHARS * 2) },
-                placeholder = { Text(stringResource(R.string.decide_question_hint)) },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = stringResource(R.string.decide_question_hint)
             )
             Eyebrow(stringResource(R.string.decide_options))
             labels.forEachIndexed { index, label ->
@@ -490,12 +488,11 @@ private fun OptionRow(
 ) {
     Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         GlossyShape(shape, shape.name, Modifier.size(40.dp), tint = Atmosphere.Peach.gloss)
-        OutlinedTextField(
+        ShapesTextField(
             value = label,
             onValueChange = onChange,
-            placeholder = { Text(stringResource(R.string.decide_option_hint)) },
-            singleLine = true,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
+            placeholder = stringResource(R.string.decide_option_hint)
         )
         if (canRemove) {
             IconButton(onClick = onRemove) {
@@ -526,10 +523,9 @@ fun MochiSetupScreen(
             FaceShape(face ?: MochiMood.Happy.toFace(name), null, Modifier.size(96.dp), castShadow = true)
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Eyebrow(stringResource(R.string.mochi_name))
-                OutlinedTextField(
+                ShapesTextField(
                     value = draft.name,
                     onValueChange = { draft = draft.copy(name = it.take(MAX_LABEL_CHARS)) },
-                    singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
             }

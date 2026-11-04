@@ -8,6 +8,8 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -33,6 +35,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -61,6 +65,7 @@ private fun ThemeChoice.label(): Int = when (this) {
 }
 
 /** Screen 9. */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SettingsScreen(
     hero: StatusWidgetKind,
@@ -150,8 +155,13 @@ fun SettingsScreen(
                         modifier = Modifier.weight(1.4f)
                     )
                 }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(stringResource(R.string.settings_atmosphere), Modifier.weight(1f))
+                // Wraps rather than squeezing the label when text is set large.
+                FlowRow(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    itemVerticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(stringResource(R.string.settings_atmosphere))
                     AtmosphereSwatches(AtmosphereChoices, atmosphere, onAtmosphereChange)
                 }
             }
@@ -168,6 +178,7 @@ fun SettingsScreen(
                 .fillMaxWidth()
                 .clip(CircleShape)
                 .clickable(onClick = onAboutClick)
+                .heightIn(min = 48.dp)
                 .padding(12.dp),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
@@ -231,7 +242,8 @@ internal fun AtmosphereSwatches(
                         selected = isSelected,
                         role = Role.RadioButton,
                         onClick = { onChange(if (isSelected) null else choice) }
-                    ),
+                    )
+                    .semantics { contentDescription = choice.name },
                 contentAlignment = Alignment.Center
             ) {
                 Box(
@@ -257,7 +269,7 @@ private fun SettingRow(@StringRes title: Int, value: String, onClick: (() -> Uni
     Row(
         modifier
             .fillMaxWidth()
-            .heightIn(min = 32.dp)
+            .heightIn(min = 48.dp)
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -326,7 +338,7 @@ private fun LinkRow(@StringRes title: Int, onClick: () -> Unit, modifier: Modifi
     Row(
         modifier
             .fillMaxWidth()
-            .heightIn(min = 32.dp)
+            .heightIn(min = 48.dp)
             .clickable(onClick = onClick),
         verticalAlignment = Alignment.CenterVertically
     ) {

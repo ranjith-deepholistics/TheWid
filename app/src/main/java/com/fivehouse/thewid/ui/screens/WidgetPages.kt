@@ -61,6 +61,7 @@ import com.fivehouse.thewid.data.personal.TimeSettings
 import com.fivehouse.thewid.data.status.NowPlayingStatus
 import com.fivehouse.thewid.data.status.TimeStatus
 import com.fivehouse.thewid.ui.components.BackButton
+import com.fivehouse.thewid.ui.components.BurstHalo
 import com.fivehouse.thewid.ui.components.DottedRing
 import com.fivehouse.thewid.ui.components.Eyebrow
 import com.fivehouse.thewid.ui.components.FaceShape
@@ -76,6 +77,7 @@ import com.fivehouse.thewid.ui.shapes.FaceExpression
 import com.fivehouse.thewid.ui.shapes.GlossyShape
 import com.fivehouse.thewid.ui.shapes.ShapeCatalog
 import com.fivehouse.thewid.ui.shapes.ShapeSurface
+import com.fivehouse.thewid.ui.shapes.rememberReduceMotion
 import com.fivehouse.thewid.ui.theme.Accent
 import com.fivehouse.thewid.ui.theme.Atmosphere
 import com.fivehouse.thewid.ui.theme.GlossTint
@@ -232,6 +234,7 @@ private fun Disc(track: NowPlayingStatus, playing: Boolean, progress: Float, mod
         label = "discAngle"
     )
     val face = track.toFace()
+    val reduceMotion = rememberReduceMotion()
     Box(modifier.size(260.dp), contentAlignment = Alignment.Center) {
         DottedRing({ progress }, Modifier.fillMaxSize())
         FaceShape(
@@ -239,7 +242,7 @@ private fun Disc(track: NowPlayingStatus, playing: Boolean, progress: Float, mod
             null,
             Modifier
                 .size(200.dp)
-                .graphicsLayer { rotationZ = if (playing) angle else 0f }
+                .graphicsLayer { rotationZ = if (playing && !reduceMotion) angle else 0f }
         )
     }
 }
@@ -287,13 +290,7 @@ fun MochiPage(
                 batteryFace?.let { InfoChip(it.value.resolve(context)) }
                 Box(Modifier.size(260.dp), contentAlignment = Alignment.Center) {
                     if (face?.expression == FaceExpression.Excited) {
-                        GlossyShape(
-                            ShapeCatalog.Burst,
-                            null,
-                            Modifier.size(260.dp),
-                            tint = GlossTint.Accent,
-                            fill = 0.25f
-                        )
+                        BurstHalo(Modifier.size(260.dp))
                     }
                     face?.let { FaceShape(it, name, Modifier.size(180.dp)) }
                 }
@@ -475,7 +472,7 @@ fun DecidePage(
                 }
             }
         }
-        PrimaryPill(stringResource(R.string.decide_roll_again), onRoll)
+        PrimaryPill(stringResource(R.string.decide_roll_again), onRoll, showDot = true)
     }
 }
 
@@ -519,7 +516,7 @@ fun FocusPage(
         Box(Modifier.size(320.dp), contentAlignment = Alignment.Center) {
             ProgressTicks(state.progressAt(nowMs), Modifier.fillMaxSize())
             GlossyShape(
-                if (state.onBreak) ShapeCatalog.Circle else ShapeCatalog.VerySunny,
+                if (state.onBreak) ShapeCatalog.Circle else ShapeCatalog.Sunny,
                 null,
                 Modifier.size(210.dp),
                 tint = Atmosphere.DuskBloom.gloss,

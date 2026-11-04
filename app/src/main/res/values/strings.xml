@@ -123,6 +123,7 @@
     <string name="access_exact_scope">Awake time only</string>
     <string name="widget_live">Live</string>
     <string name="widget_needs_access">Needs notification access</string>
+    <string name="widget_needs_permission">Needs a permission</string>
     <string name="widget_value_playing">PLAY</string>
     <string name="widget_value_paused">PAUSE</string>
     <string name="widget_value_off">OFF</string>
@@ -321,7 +322,7 @@
     <string name="mochi_moods">MOODS</string>
     <string name="mochi_charging">Charging</string>
     <string name="mochi_charging_body">%1$s gets excited</string>
-    <string name="mochi_low_battery">Battery under 15%%</string>
+    <string name="mochi_low_battery" formatted="false">Battery under 15%</string>
     <string name="mochi_low_battery_body">%1$s gets sleepy</string>
     <string name="mochi_silent">Phone on silent</string>
     <string name="mochi_silent_body">%1$s gets dozy</string>

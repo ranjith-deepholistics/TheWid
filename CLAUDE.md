@@ -13,7 +13,8 @@ Product spec, design tokens and build phases: @SHAPES_BUILD_SPEC.md
 
 ## Commands
 
-- Device-free checks: `./gradlew :app:assembleDebug :app:testDebugUnitTest :app:lintDebug :app:ktlintCheck`
+- Device-free checks: `./gradlew :app:assembleDebug :app:testDebugUnitTest :app:lintDebug :app:ktlintCheck :app:validateDebugScreenshotTest`
+- Screens render on this Mac with no device: `./gradlew :app:updateDebugScreenshotTest` writes PNGs to `app/src/screenshotTestDebug/reference/`. View them and compare with `design/Shapes-V1/` before calling UI work done. This can't render Glance widgets.
 - Format: `./gradlew :app:ktlintFormat`. A hook runs this after every Kotlin edit, but it can't fix everything, so `ktlintCheck` can still fail.
 - Instrumented tests need the user's phone: `./gradlew :app:connectedDebugAndroidTest`
 

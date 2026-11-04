@@ -148,7 +148,7 @@ fun AccessScreen(
         }
         when (stage) {
             PermissionStage.Ask -> {
-                PrimaryPill(stringResource(R.string.access_allow), onAllow)
+                PrimaryPill(stringResource(R.string.access_allow), onAllow, showDot = true)
                 TextButton(onClick = onBack) { Text(stringResource(R.string.permission_not_now)) }
             }
 

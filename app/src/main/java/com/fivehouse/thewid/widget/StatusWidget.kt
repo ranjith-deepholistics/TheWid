@@ -541,10 +541,14 @@ fun FaceValue.resolve(context: Context): String = when (this) {
 
     is FaceValue.Countdown -> formatCountdown(leftMs)
 
-    FaceValue.LiveClock -> DateFormat.getTimeFormat(context).format(Date())
+    FaceValue.LiveClock -> clockText(context, "HH:mm", "h:mm")
 
-    FaceValue.LiveClockSeconds -> DateFormat.getTimeFormat(context).format(Date())
+    FaceValue.LiveClockSeconds -> clockText(context, "HH:mm:ss", "h:mm:ss")
 }
+
+/** Matches the widget's TextClock: digits only, so it fits a hero tile. */
+private fun clockText(context: Context, pattern24: String, pattern12: String): String =
+    DateFormat.format(if (DateFormat.is24HourFormat(context)) pattern24 else pattern12, Date()).toString()
 
 /** Minutes and seconds, rounding up so a timer shows 25:00 at its very start. */
 fun formatCountdown(leftMs: Long): String {

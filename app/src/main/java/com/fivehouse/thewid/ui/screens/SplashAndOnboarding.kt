@@ -89,16 +89,20 @@ private fun SplashContent(progress: () -> Float, modifier: Modifier = Modifier) 
 }
 
 @Composable
-fun OnboardingScreen(onFinished: () -> Unit, modifier: Modifier = Modifier) {
-    val pager = rememberPagerState(pageCount = { ONBOARDING_PAGES })
+fun OnboardingScreen(onFinished: () -> Unit, modifier: Modifier = Modifier, initialPage: Int = 0) {
+    val pager = rememberPagerState(initialPage) { ONBOARDING_PAGES }
     val scope = rememberCoroutineScope()
     Column(
         modifier
             .fillMaxSize()
             .safeDrawingPadding()
     ) {
-        HorizontalPager(pager, Modifier.weight(1f)) { page ->
-            Column(Modifier.padding(horizontal = 24.dp)) {
+        HorizontalPager(pager, Modifier.weight(1f), verticalAlignment = Alignment.Top) { page ->
+            Column(
+                Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 24.dp)
+            ) {
                 Spacer(Modifier.height(16.dp))
                 when (page) {
                     0 -> RulesPage()
@@ -131,7 +135,7 @@ private fun OnboardingFooter(page: Int, onNext: () -> Unit, modifier: Modifier =
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             PageDots(page)
-            PrimaryPill(stringResource(R.string.onboarding_start), onNext)
+            PrimaryPill(stringResource(R.string.onboarding_start), onNext, showDot = true)
         }
     } else {
         Row(
@@ -192,7 +196,7 @@ private fun RuleSample(label: String, modifier: Modifier = Modifier, shape: @Com
 
 @Composable
 private fun RulesPage(modifier: Modifier = Modifier) {
-    Column(modifier) {
+    Column(modifier.fillMaxSize()) {
         Eyebrow(stringResource(R.string.onboarding1_eyebrow))
         Spacer(Modifier.height(16.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -212,14 +216,14 @@ private fun RulesPage(modifier: Modifier = Modifier) {
                 GlossyShape(ShapeCatalog.Burst, null, Modifier.size(90.dp), tint = GlossTint.Accent)
             }
         }
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.weight(1f))
         PageTitle(stringResource(R.string.onboarding1_title), stringResource(R.string.onboarding1_body))
     }
 }
 
 @Composable
 private fun HeroPage(modifier: Modifier = Modifier) {
-    Column(modifier) {
+    Column(modifier.fillMaxSize()) {
         Eyebrow(stringResource(R.string.onboarding2_eyebrow))
         Box(
             Modifier
@@ -241,7 +245,7 @@ private fun HeroPage(modifier: Modifier = Modifier) {
                 clock = ClockMarks(hourDegrees = 291f, minuteDegrees = 252f)
             )
         }
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.weight(1f))
         PageTitle(stringResource(R.string.onboarding2_title), stringResource(R.string.onboarding2_body))
     }
 }

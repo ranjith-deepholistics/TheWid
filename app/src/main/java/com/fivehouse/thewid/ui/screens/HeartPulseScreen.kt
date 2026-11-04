@@ -40,6 +40,8 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -180,7 +182,8 @@ private fun ColourChoices(selected: PulseColor, onChoose: (PulseColor) -> Unit, 
             Box(
                 Modifier
                     .size(48.dp)
-                    .selectable(selected = isSelected, role = Role.RadioButton, onClick = { onChoose(choice) }),
+                    .selectable(selected = isSelected, role = Role.RadioButton, onClick = { onChoose(choice) })
+                    .semantics { contentDescription = choice.name },
                 contentAlignment = Alignment.Center
             ) {
                 Box(

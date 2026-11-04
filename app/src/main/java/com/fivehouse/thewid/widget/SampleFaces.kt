@@ -37,7 +37,10 @@ fun sampleFace(kind: StatusWidgetKind): StatusFace = when (kind) {
 
     StatusWidgetKind.Alarm -> AlarmStatus.Scheduled(Instant.parse("2026-11-03T07:00:00Z")).toFace(ZoneOffset.UTC, true)
 
-    StatusWidgetKind.Time -> TimeStatus(ZonedDateTime.parse("2026-11-02T09:42:00+05:30"), isDay = true).toFace()
+    // A fixed time, because this also appears in screenshot tests and the launcher's picker.
+    StatusWidgetKind.Time -> TimeStatus(ZonedDateTime.parse("2026-11-02T09:42:00+05:30"), isDay = true)
+        .toFace()
+        .copy(value = FaceValue.Literal("09:42"))
 
     StatusWidgetKind.Alerts -> AlertsStatus.Count(2).toFace()
 

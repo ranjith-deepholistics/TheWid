@@ -51,8 +51,8 @@ private const val CLOCK_DOT_ORBIT = 0.42f
 private const val SHADOW_SHAPE_SCALE = 0.86f
 private const val GLOSS_CENTER_X = 0.35f
 private const val GLOSS_CENTER_Y = 0.28f
-private const val GLOSS_RADIUS = 0.9f
-private const val GLOSS_LIGHT_STOP = 0.55f
+private const val GLOSS_RADIUS = 0.72f
+private const val GLOSS_LIGHT_STOP = 0.5f
 
 /**
  * Draws a shape onto an Android [Canvas]. Both the in-app composable and the Glance bitmap
@@ -295,7 +295,7 @@ internal class ShapePainter(private val density: Float) {
         const val RIM_WIDTH_DP = 1f
         const val OUTLINE_WIDTH_DP = 1.5f
         val RIM = Color.White.copy(alpha = 0.75f)
-        val EMPTY_WELL = Color.White.copy(alpha = 0.3f)
+        val EMPTY_WELL = Color.White.copy(alpha = 0.45f)
         val SHADOW = Ink.copy(alpha = 0.22f)
     }
 }

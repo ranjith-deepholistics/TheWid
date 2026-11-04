@@ -32,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -60,7 +61,6 @@ import com.fivehouse.thewid.widget.StatusWidgetKind
 import com.fivehouse.thewid.widget.sampleFace
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
 
 /** Screen 3. */
 @Composable
@@ -73,7 +73,8 @@ fun LibraryScreen(
     onMyWidgetsClick: () -> Unit,
     onAddClick: () -> Unit,
     onSettingsClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    today: LocalDate = LocalDate.now()
 ) {
     Box(modifier.fillMaxSize()) {
         Column(
@@ -84,7 +85,7 @@ fun LibraryScreen(
                 .padding(top = 8.dp, bottom = 96.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            LibraryHeader(onSearchClick)
+            LibraryHeader(today, onSearchClick)
             HeroTile(hero, faces[hero], onHeroClick)
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
                 Text(stringResource(R.string.library_categories), style = MaterialTheme.typography.titleMedium)
@@ -113,11 +114,12 @@ fun LibraryScreen(
 }
 
 @Composable
-private fun LibraryHeader(onSearchClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun LibraryHeader(today: LocalDate, onSearchClick: () -> Unit, modifier: Modifier = Modifier) {
+    val locale = LocalConfiguration.current.locales[0]
     Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Column {
             Text(
-                LocalDate.now().format(DateTimeFormatter.ofLocalizedDate(FormatStyle.MEDIUM)),
+                today.format(DateTimeFormatter.ofPattern("EEEE, d MMM", locale)),
                 style = MaterialTheme.typography.bodySmall
             )
             Text(stringResource(R.string.product_name), style = MaterialTheme.typography.headlineLarge)
@@ -179,13 +181,14 @@ private fun CategoryBento(
                     }
                 }
                 CategoryTile(WidgetCategory.Companion, onClick) {
-                    GlossyShape(ShapeCatalog.Puffy, null, Modifier.size(56.dp))
+                    faces[StatusWidgetKind.Mochi]?.let { FaceShape(it, null, Modifier.size(64.dp)) }
+                        ?: GlossyShape(ShapeCatalog.Puffy, null, Modifier.size(64.dp))
                 }
             }
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             CategoryTile(WidgetCategory.People, onClick, Modifier.weight(1f)) {
-                GlossyShape(ShapeCatalog.Heart, null, Modifier.size(44.dp))
+                GlossyShape(ShapeCatalog.Heart, null, Modifier.size(44.dp), tint = Atmosphere.DuskBloom.gloss)
             }
             CategoryTile(WidgetCategory.Fun, onClick, Modifier.weight(1f)) {
                 GlossyShape(ShapeCatalog.Cookie9Sided, null, Modifier.size(44.dp))
@@ -376,7 +379,7 @@ private fun CatalogTile(
         if (widget.needsPermission && (face?.needsAccess == true || (face == null && !heartPulseOn))) {
             Icon(
                 painterResource(R.drawable.ic_lock),
-                null,
+                stringResource(R.string.widget_needs_permission),
                 Modifier
                     .align(Alignment.TopEnd)
                     .size(18.dp),
