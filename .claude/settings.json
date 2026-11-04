@@ -1,0 +1,29 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_response.filePath // .tool_input.file_path' | grep -qE '\\.kts?$' && { cd \"$CLAUDE_PROJECT_DIR\" && ./gradlew -q :app:ktlintFormat >/dev/null 2>&1; } || true",
+            "timeout": 120,
+            "statusMessage": "Formatting Kotlin with ktlint"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -r '.tool_input.command // empty' | grep -qE '(^|[[:space:]/;&|(])emulator[[:space:]]+(-avd[[:space:]]|@)|(^|[[:space:]/;&|(])android[[:space:]]+emulator[[:space:]]+start' && jq -n '{hookSpecificOutput:{hookEventName:\"PreToolUse\",permissionDecision:\"deny\",permissionDecisionReason:\"This project is tested on a physical device, never an emulator. Build the app and give the user a checklist instead.\"}}' || true",
+            "statusMessage": "Checking for emulator launches"
+          }
+        ]
+      }
+    ]
+  }
+}

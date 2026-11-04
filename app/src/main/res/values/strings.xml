@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">TheWid</string>
+
+    <string name="catalog_title">Foundation</string>
+    <string name="catalog_type">Type: Doto and Roboto Flex</string>
+    <string name="catalog_flex_weight">Roboto Flex %1$d</string>
+    <string name="catalog_rule_fill">Rule 1: fill = level</string>
+    <string name="catalog_rule_outline">Rule 2: outline = off or unavailable</string>
+    <string name="catalog_rule_spike">Rule 3: spikier = more activity</string>
+    <string name="catalog_rule_morph">Rule 4: morph = state change</string>
+    <string name="catalog_morph_action">Morph</string>
+    <string name="catalog_glass">Glass tile</string>
+    <string name="catalog_bitmap">Compose and Glance bitmap</string>
+    <string name="catalog_bitmap_compose">Compose</string>
+    <string name="catalog_bitmap_glance">Bitmap</string>
+    <string name="catalog_pills">Primary pill</string>
+    <string name="catalog_pill_label">Add to home screen</string>
+    <string name="catalog_all_shapes">All shapes</string>
+</resources>
